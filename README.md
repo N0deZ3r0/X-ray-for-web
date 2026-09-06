@@ -7,7 +7,7 @@
 [![CI](https://github.com/N0deZ3r0/X-ray-for-web/actions/workflows/ci.yml/badge.svg)](https://github.com/N0deZ3r0/X-ray-for-web/actions/workflows/ci.yml)
 ![version](https://img.shields.io/badge/version-0.1.0-3b5bdb)
 ![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-4c6ef5)
-![checks](https://img.shields.io/badge/checks-214-2f9e44)
+![checks](https://img.shields.io/badge/checks-225-2f9e44)
 ![runtime dependencies](https://img.shields.io/badge/runtime_dependencies-0-2f9e44)
 
 **English** · [Русский](README.ru.md)
@@ -130,7 +130,8 @@ and beacon scenarios, including a deliberate evasion of the instrument. It was w
 node bench/server.js
 ```
 
-Open http://localhost:8080. A full run produces exactly 10 network requests: 7 attributable,
+Open http://localhost:8080 — the bench follows your browser language too. A full run
+produces exactly 10 network requests: 7 attributable,
 3 evasions, 0 false positives across 34 noise requests. Details in
 [bench/README.md](bench/README.md).
 
@@ -140,7 +141,7 @@ Open http://localhost:8080. A full run produces exactly 10 network requests: 7 a
 node tests/run.mjs
 ```
 
-**214 checks** in seven suites, with no dependencies at all — plain `node`. The most
+**225 checks** in eight suites, with no dependencies at all — plain `node`. The most
 important one is not the parser suite but `tests/facts.test.mjs`: remove an event, and the
 fact derived from it must disappear. The instrument has no right to state what it did not
 record.

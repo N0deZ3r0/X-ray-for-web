@@ -7,7 +7,7 @@
 [![CI](https://github.com/N0deZ3r0/X-ray-for-web/actions/workflows/ci.yml/badge.svg)](https://github.com/N0deZ3r0/X-ray-for-web/actions/workflows/ci.yml)
 ![version](https://img.shields.io/badge/version-0.1.0-3b5bdb)
 ![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-4c6ef5)
-![проверок](https://img.shields.io/badge/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BE%D0%BA-214-2f9e44)
+![проверок](https://img.shields.io/badge/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BE%D0%BA-225-2f9e44)
 ![зависимостей](https://img.shields.io/badge/%D0%B7%D0%B0%D0%B2%D0%B8%D1%81%D0%B8%D0%BC%D0%BE%D1%81%D1%82%D0%B5%D0%B9-0-2f9e44)
 
 [English](README.md) · **Русский**
@@ -131,7 +131,8 @@ grep -rn "storage.local\|storage.sync" extension --include=*.js
 node bench/server.js
 ```
 
-Открывать http://localhost:8080. Полный прогон даёт ровно 10 сетевых обращений:
+Открывать http://localhost:8080 — стенд тоже следует за языком браузера.
+Полный прогон даёт ровно 10 сетевых обращений:
 7 атрибутируемых, 3 обхода, 0 ложных срабатываний на 34 шумовых запросах.
 Подробности — [bench/README.md](bench/README.md).
 
@@ -141,7 +142,7 @@ node bench/server.js
 node tests/run.mjs
 ```
 
-214 проверок в семи наборах, без единой зависимости — только `node`. Самый
+225 проверок в восьми наборах, без единой зависимости — только `node`. Самый
 важный набор не тот, что проверяет разбор, а `tests/facts.test.mjs`: уберите
 событие — исчезнет факт. Прибор не имеет права утверждать то, чего не записал.
 

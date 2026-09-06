@@ -3,29 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Стенд — Рентген для веба</title>
+<title>Bench — X-ray for web</title>
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 
 <header>
-  <h1>Стенд</h1>
-  <p class="sub">
-    Тестовый оракул для прибора. Каждый сценарий выполняет настоящее действие и
-    печатает рядом, <b>что прибор обязан показать</b>. Пока прибора нет — сверяет человек.
-  </p>
-  <p class="warn">
-    Стенд не отправляет наружу ни одного байта: все приёмники — localhost.
-    Формы адресов и полей повторяют настоящие, чтобы проверять разборщики.
-  </p>
+  <h1 data-tr="Стенд"></h1>
+  <p class="sub" data-tr="Тестовый оракул для прибора. Каждый сценарий выполняет настоящее действие и печатает рядом, что прибор обязан показать. Пока прибора нет — сверяет человек."></p>
+  <p class="warn" data-tr="Стенд не отправляет наружу ни одного байта: все приёмники — localhost. Формы адресов и полей повторяют настоящие, чтобы проверять разборщики."></p>
 </header>
 
 <div class="bar">
-  <button id="run-all" class="primary">Прогнать всё</button>
+  <button id="run-all" class="primary" data-tr="Прогнать всё"></button>
   <span class="filters" id="filters"></span>
-  <button id="show-received">Что принял стенд</button>
-  <button id="reset">Очистить приём</button>
-  <a href="/lcp.html" class="lcp-link">Замер LCP →</a>
+  <button id="show-received" data-tr="Что принял стенд"></button>
+  <button id="reset" data-tr="Очистить приём"></button>
+  <a href="/lcp.html" class="lcp-link" data-tr="Замер LCP →"></a>
 </div>
 
 <div id="noise-box" class="noise"></div>
@@ -64,6 +58,7 @@ window.__benchInline = __benchInline;
 <script src="/noise.js"></script>
 <script src="/probe.js"></script>
 <script src="/breakage.js"></script>
+<script src="/i18n.js"></script>
 <script src="/scenarios.js"></script>
 
 <script>
@@ -77,11 +72,13 @@ window.__benchInline = __benchInline;
   const filters = document.getElementById('filters');
   for (const name of ['всё', ...этапы]) {
     const b = document.createElement('button');
-    b.textContent = name;
+    b.textContent = name === 'всё' ? __tr('Все') : name;
+    b.dataset.name = name;
     b.className = 'filter' + (name === активный ? ' on' : '');
     b.onclick = () => {
       активный = name;
-      [...filters.children].forEach((c) => c.classList.toggle('on', c.textContent === name));
+      // Сравнение по имени этапа, а не по подписи: подпись переводится.
+      [...filters.children].forEach((c) => c.classList.toggle('on', c.dataset.name === name));
       render();
     };
     filters.appendChild(b);
@@ -99,7 +96,7 @@ window.__benchInline = __benchInline;
   async function запустить(s, card) {
     const out = card.querySelector('.out');
     const badge = card.querySelector('.badge');
-    badge.textContent = 'идёт';
+    badge.textContent = __tr('идёт');
     badge.className = 'badge running';
     const t0 = performance.now();
     try {
@@ -110,7 +107,7 @@ window.__benchInline = __benchInline;
       out.textContent = показать(r);
       out.hidden = false;
     } catch (e) {
-      badge.textContent = 'ошибка';
+      badge.textContent = __tr('ошибка');
       badge.className = 'badge fail';
       out.textContent = String((e && e.stack) || e);
       out.hidden = false;
@@ -133,30 +130,31 @@ window.__benchInline = __benchInline;
         '<span class="id">' + s.id + '</span>' +
         '<span class="title"></span>' +
         '<span class="badge"></span>';
-      h.querySelector('.title').textContent = s.title;
+      h.querySelector('.title').textContent = __tr(s.title);
       card.appendChild(h);
 
       if (s.note) {
         const n = document.createElement('p');
         n.className = 'note';
-        n.textContent = s.note;
+        n.textContent = __tr(s.note);
         card.appendChild(n);
       }
 
       const exp = document.createElement('div');
       exp.className = 'expect';
-      exp.innerHTML = '<div class="expect-h">Прибор обязан показать</div>';
+      exp.innerHTML = '<div class="expect-h"></div>';
+      exp.querySelector('.expect-h').textContent = __tr('Прибор обязан показать');
       const ul = document.createElement('ul');
       for (const e of s.expect) {
         const li = document.createElement('li');
-        li.textContent = e;
+        li.textContent = __tr(e);
         ul.appendChild(li);
       }
       exp.appendChild(ul);
       card.appendChild(exp);
 
       const btn = document.createElement('button');
-      btn.textContent = 'Выполнить';
+      btn.textContent = __tr('Выполнить');
       btn.onclick = () => запустить(s, card);
       card.appendChild(btn);
 
@@ -185,8 +183,8 @@ window.__benchInline = __benchInline;
     ]);
     const all = [...a, ...b].sort((x, y) => x.at - y.at);
     box.textContent =
-      'Стенд принял ' + all.length + ' обращений. Это независимое свидетельство:\n' +
-      'журнал прибора обязан совпасть с ним по составу.\n\n' +
+      __tr('Стенд принял N обращений. Это независимое свидетельство: журнал прибора обязан совпасть с ним по составу.').replace('N', all.length) +
+      '\n\n' +
       JSON.stringify(all, null, 2);
     box.hidden = false;
     box.scrollIntoView({ behavior: 'smooth' });
@@ -200,7 +198,11 @@ window.__benchInline = __benchInline;
     document.getElementById('received').hidden = true;
   };
 
+  __trПрименить();
   render();
+  // Жалуемся один раз и после отрисовки: к этому моменту через тр() прошли все
+  // строки сценариев, и список пропусков в консоли получается полным.
+  __trПожаловаться();
 })();
 </script>
 
