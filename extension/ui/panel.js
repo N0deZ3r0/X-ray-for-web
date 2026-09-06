@@ -369,10 +369,13 @@
       const card = document.createElement('div');
       card.className = 'fact' + (f.id === 'evasion' ? ' evasion' : '');
 
-      const t = document.createElement('div');
-      t.className = 'fact-text';
-      t.textContent = f.text;
-      card.appendChild(t);
+      // Именно 'заголовок', а не 't': t — это перевод, и локальная переменная
+      // с тем же именем перекрывала его в этом же блоке. Панель падала на первом
+      // же факте, а свод — главное, ради чего прибор существует.
+      const заголовок = document.createElement('div');
+      заголовок.className = 'fact-text';
+      заголовок.textContent = f.text;
+      card.appendChild(заголовок);
 
       if (f.value) {
         const v = document.createElement('div');

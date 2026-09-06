@@ -10,7 +10,9 @@ class Element {
     this.tagName = String(tag).toUpperCase();
     this.children = [];
     this.parent = null;
-    this._text = '';
+    // Текстовые узлы лежат В ОДНОМ списке с элементами. Иначе порядок между
+    // текстом и вложенной разметкой теряется, и проверка показывает не то,
+    // что увидит человек.
     this._class = '';
     this.hidden = false;
     this.disabled = false;
@@ -34,12 +36,17 @@ class Element {
   set id(v) { this.attrs.set('id', v); }
 
   get textContent() {
-    return this._text + this.children.map((c) => c.textContent).join('');
+    return this.children.map((c) => (c.текстовый ? c.значение : c.textContent)).join('');
   }
   set textContent(v) {
-    for (const c of this.children) c.parent = null;
+    for (const c of this.children) if (!c.текстовый) c.parent = null;
     this.children = [];
-    this._text = String(v == null ? '' : v);
+    const s = String(v == null ? '' : v);
+    if (s) this.children.push({ текстовый: true, значение: s });
+  }
+
+  _добавитьТекст(s) {
+    if (s) this.children.push({ текстовый: true, значение: s });
   }
 
   set innerHTML(html) {
@@ -87,6 +94,7 @@ class Element {
 
   querySelector(селектор) {
     for (const c of this.children) {
+      if (c.текстовый) continue;
       if (c.подходит(селектор)) return c;
       const глубже = c.querySelector(селектор);
       if (глубже) return глубже;
@@ -98,6 +106,7 @@ class Element {
     const из = [];
     const обойти = (узел) => {
       for (const c of узел.children) {
+        if (c.текстовый) continue;
         if (c.подходит(селектор)) из.push(c);
         обойти(c);
       }
@@ -122,7 +131,7 @@ function разобратьРазметку(html, корень) {
     const [, закрывающий, тег, атрибуты, текст] = m;
     const верх = стек[стек.length - 1];
     if (текст !== undefined) {
-      верх._text += текст;
+      верх._добавитьТекст(текст);
       continue;
     }
     if (закрывающий) {
