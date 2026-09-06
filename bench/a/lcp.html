@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Замер LCP — X-ray for web</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .lcp-hero {
+    height: 420px; margin: 14px 0; border-radius: 8px;
+    background: linear-gradient(135deg, #17150f 0%, #3a3529 55%, #8a3b12 100%);
+    color: #fbfaf8; display: flex; align-items: center; justify-content: center;
+    font: 600 22px ui-monospace, Consolas, monospace; letter-spacing: .04em;
+  }
+  .lab { border: 1px solid #d9d4cb; border-radius: 8px; padding: 12px 14px; margin: 12px 0; }
+  .lab h2 { margin: 0 0 6px; font-size: 15px; }
+  .lab table { border-collapse: collapse; width: 100%; font: 12px ui-monospace, Consolas, monospace; }
+  .lab th, .lab td { border-bottom: 1px solid #e6e2da; padding: 4px 6px; text-align: right; }
+  .lab th:first-child, .lab td:first-child { text-align: left; }
+  .lab .verdict { margin-top: 10px; padding: 8px 10px; border-radius: 6px; background: #f3efe7; font-size: 13px; line-height: 1.5; }
+  .lab .verdict.bad { background: #f7e2d6; }
+  .lab .state { font: 12px ui-monospace, Consolas, monospace; color: #6b6559; }
+  .lab .big { font-size: 13px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Замер LCP</h1>
+  <p class="sub">
+    Критерий Э1: прибор не должен ухудшать <b>LCP</b> больше чем на 5%.
+    Проверить его автоматизацией не вышло — вкладку под управлением Chrome
+    считает скрытой и не отрисовывает вовсе. Поэтому замер делается здесь,
+    в вашем обычном видимом окне, вашими руками.
+  </p>
+  <p class="warn">
+    Страница сама себя перезагружает и складывает замеры в localStorage этого
+    origin. Наружу не уходит ничего.
+  </p>
+</header>
+
+<div class="lab" id="panel">
+  <h2>Что делать</h2>
+  <ol class="big">
+    <li>Наберите серию <b>без прибора</b> — расширение выключено или запись не идёт.</li>
+    <li>Включите запись на <code>localhost:8080</code> и наберите серию <b>с прибором</b>.</li>
+    <li>Сравнение появится, как только в обеих сериях будет хотя бы по 10 замеров.</li>
+  </ol>
+  <p class="state" id="state">—</p>
+  <p>
+    <button id="run" class="primary">Набрать 20 замеров</button>
+    <button id="stop" hidden>Остановить</button>
+    <button id="clear">Стереть замеры</button>
+  </p>
+</div>
+
+<div class="lab" id="results">
+  <h2>Замеры</h2>
+  <div id="table"></div>
+  <div class="verdict" id="verdict">Замеров пока нет.</div>
+</div>
+
+<!-- Кандидат в LCP: крупный блок, отрисовка которого и есть измеряемое. -->
+<div class="lcp-hero">X-RAY FOR WEB — LCP TARGET</div>
+
+<p class="sub">
+  Ниже — те же поверхности отпечатка, что на главной странице стенда: замер без
+  нагрузки мерил бы не прибор, а пустую страницу.
+</p>
+
+<!-- Настоящие сторонние скрипты с другого origin, как на живом сайте. -->
+<script src="http://localhost:8081/fp-basic.js"></script>
+<script src="http://localhost:8081/fp-fonts.js"></script>
+<script src="http://localhost:8081/fp-device.js"></script>
+
+<script src="/lcp.js"></script>
+</body>
+</html>
