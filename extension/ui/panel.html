@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>X-ray for web</title>
+<link rel="stylesheet" href="panel.css">
+</head>
+<body>
+
+<header>
+  <h1>Рентген</h1>
+  <div id="origin" class="origin">—</div>
+</header>
+
+<div class="controls">
+  <button id="start" class="primary">Записать этот сайт</button>
+  <button id="stop" hidden>Остановить</button>
+  <button id="clear">Очистить</button>
+  <button id="export-report">Сохранить отчёт</button>
+  <button id="export-json">Сохранить JSON</button>
+  <label class="check">
+    <input type="checkbox" id="third-party">
+    включая сторонние фреймы
+  </label>
+  <label class="check danger">
+    <input type="checkbox" id="raw-export">
+    экспорт без редакции
+  </label>
+  <p class="hint" id="hint">
+    Запись начинается с перезагрузки вкладки: обёртки должны стоять
+    до первого скрипта страницы.
+  </p>
+</div>
+
+<section class="scope">
+  <b>Что здесь наблюдается.</b> Поверхности отпечатка и исходящее — из двух
+  независимых источников: обёртки внутри страницы и сеть. Их несовпадение и
+  есть детектор обхода.
+  <br>
+  Разбор формата подключён для <b>GA4</b>, <b>Meta Pixel</b>, <b>Яндекс.Метрики</b>
+  и <b>Вебвизора</b>. Для остальных адресов тело показано как есть с подписью
+  «формат не опознан» — это не то же самое, что «полей нет».
+  Отпечаток шрифтов через <code>offsetWidth</code> не покрыт намеренно.
+</section>
+
+<h2 class="journal-h">Что о вас узнали</h2>
+<section id="facts" class="facts"></section>
+
+<section id="health" class="health"></section>
+
+<h2 class="journal-h">Что ушло наружу</h2>
+<main id="egress"></main>
+
+<h2 class="journal-h">Что сайт прочитал</h2>
+<div id="filters" class="filters"></div>
+<main id="log"></main>
+
+<footer>
+  <div class="limits">
+    <b>Пределы этой сборки</b>
+    <ul>
+      <li>Наблюдение изнутри страницы помечено <code>internal</code>: канал виден
+          странице. До <code>confirmed</code> его поднимает только совпадение
+          с сетью, которую страница подделать не может.</li>
+      <li>Страница видит обёртки и канал доставки.</li>
+      <li><b>Воркеры не наблюдаются.</b> Отпечаток, снятый внутри воркера,
+          прибору не виден; заметен только маячок оттуда, и то по сети.
+          Вызов из свежесозданного фрейма, наоборот, виден: прибор встаёт
+          и туда тоже.</li>
+      <li><b>Другие расширения в вашем браузере</b> подменяют те же API.
+          Их вызовы помечены «не сайт». Отличить, действует расширение само
+          или по просьбе страницы, прибор не может.</li>
+      <li><b>WebSocket сетью не проверяется:</b> разрешения не покрывают схему
+          <code>ws</code>. Это не то же самое, что «запрос не ушёл».</li>
+      <li>Разбор формата есть для GA4, Meta Pixel, Метрики и Вебвизора.
+          Для остальных адресов подпись «формат не опознан» — это не
+          «полей нет».</li>
+      <li>Не удалось разобрать стек — пишем «источник не определён»,
+          а не подставляем страницу.</li>
+    </ul>
+  </div>
+</footer>
+
+<script src="panel.js"></script>
+</body>
+</html>

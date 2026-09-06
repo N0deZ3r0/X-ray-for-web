@@ -1,0 +1,53 @@
+{
+  "id": "yandex-webvisor-bench",
+  "title": "Яндекс.Вебвизор — запись действий (стенд)",
+  "version": "2026-09",
+  "note": "Вебвизор пишет движения мыши, прокрутку, клики и ввод в поля. Это не разновидность аналитики, а запись сеанса, и показывается отдельной строкой.",
+  "match": {
+    "host": [
+      "localhost",
+      "127.0.0.1"
+    ],
+    "path": "^/webvisor"
+  },
+  "extract": [
+    {
+      "from": "path",
+      "pattern": "^/webvisor/(\\d+)",
+      "names": [
+        "counter"
+      ]
+    },
+    {
+      "from": "query"
+    }
+  ],
+  "fields": {
+    "counter": {
+      "label": "Номер счётчика, который ведёт запись",
+      "kind": "site-id",
+      "confidence": "observed"
+    },
+    "page-url": {
+      "label": "Адрес записываемой страницы",
+      "kind": "page-url",
+      "confidence": "observed"
+    },
+    "rn": {
+      "label": "Случайное число запроса",
+      "kind": "nonce",
+      "confidence": "observed"
+    },
+    "wv-part": {
+      "label": "Номер части записи",
+      "kind": "technical",
+      "confidence": "observed"
+    },
+    "wv-type": {
+      "label": "Тип передаваемых данных записи",
+      "kind": "technical",
+      "confidence": "observed"
+    }
+  },
+  "unknown": "preserve"
+}

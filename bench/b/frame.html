@@ -1,0 +1,72 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Кросс-origin фрейм стенда</title>
+<body style="font:12px system-ui;margin:0;padding:4px">
+фрейм origin B
+<script>
+// Кросс-origin фрейм. У него свой origin, свой frameId и свой набор обёрток.
+// Прибор обязан показать эти события отдельно от событий главного документа.
+(function () {
+  const out = { __bench: 'cross-origin-frame' };
+
+  // Отпечаток внутри фрейма
+  const c = document.createElement('canvas');
+  c.width = 160;
+  c.height = 40;
+  const ctx = c.getContext('2d');
+  ctx.textBaseline = 'top';
+  ctx.font = '13px Arial';
+  ctx.fillStyle = '#069';
+  ctx.fillText('кросс-origin фрейм', 2, 12);
+  out.dataUrlLength = c.toDataURL().length;
+
+  const gl = document.createElement('canvas').getContext('webgl');
+  if (gl) {
+    const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+    out.renderer = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+  }
+
+  out.timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  out.cores = navigator.hardwareConcurrency;
+
+  // Свой маячок из фрейма — обязан быть виден с frameId != 0
+  const p = new URLSearchParams({
+    v: '2',
+    tid: 'G-BENCH12345',
+    cid: '1847362910.1730000000',
+    en: 'frame_view',
+    dl: location.href,
+    'ep.frame': 'cross-origin',
+  });
+  out.beaconSent = navigator.sendBeacon('/g/collect?' + p.toString());
+
+  parent.postMessage(out, '*');
+
+  // Щуп покрытия: родитель до кросс-origin фрейма не дотянется, поэтому
+  // фрейм проверяет себя сам. Способ тот же — сигнал готовности в канал.
+  addEventListener('message', (e) => {
+    if (!e.data || e.data.__probe !== 'ping') return;
+
+    const found = { прибор: false, поверхности: null, записей: 0 };
+    const onEvent = (ev) => {
+      found.прибор = true;
+      try {
+        const payload = JSON.parse(ev.detail);
+        found.записей = payload.records.length;
+        for (const r of payload.records) {
+          if (r.kind === 'installed') found.поверхности = r.arg;
+        }
+      } catch (err) {}
+    };
+
+    addEventListener('__xray_v1', onEvent, true);
+    dispatchEvent(new CustomEvent('__xray_v1_ready'));
+
+    setTimeout(() => {
+      removeEventListener('__xray_v1', onEvent, true);
+      parent.postMessage({ __probe: 'result', found }, '*');
+    }, 350);
+  });
+})();
+</script>
+</body>

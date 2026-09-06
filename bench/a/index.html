@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Стенд — Рентген для веба</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header>
+  <h1>Стенд</h1>
+  <p class="sub">
+    Тестовый оракул для прибора. Каждый сценарий выполняет настоящее действие и
+    печатает рядом, <b>что прибор обязан показать</b>. Пока прибора нет — сверяет человек.
+  </p>
+  <p class="warn">
+    Стенд не отправляет наружу ни одного байта: все приёмники — localhost.
+    Формы адресов и полей повторяют настоящие, чтобы проверять разборщики.
+  </p>
+</header>
+
+<div class="bar">
+  <button id="run-all" class="primary">Прогнать всё</button>
+  <span class="filters" id="filters"></span>
+  <button id="show-received">Что принял стенд</button>
+  <button id="reset">Очистить приём</button>
+</div>
+
+<div id="noise-box" class="noise"></div>
+
+<main id="list"></main>
+
+<pre id="received" hidden></pre>
+
+<script>
+// Сценарий S2: вызов из ВСТРОЕННОГО скрипта первой стороны.
+// Должен быть виден прибору с attribution.inline = true и адресом документа.
+function __benchInline() {
+  const c = document.createElement('canvas');
+  c.width = 180;
+  c.height = 40;
+  const ctx = c.getContext('2d');
+  ctx.textBaseline = 'top';
+  ctx.font = '13px Arial';
+  ctx.fillStyle = '#069';
+  ctx.fillText('inline первой стороны', 2, 12);
+  return {
+    dataUrlLength: c.toDataURL().length,
+    измерено: ctx.measureText('проба').width.toFixed(2),
+  };
+}
+window.__benchInline = __benchInline;
+</script>
+
+<!-- Третья сторона: другой origin, чтобы атрибуция была настоящей -->
+<script src="http://localhost:8081/fp-basic.js"></script>
+<script src="http://localhost:8081/fp-fonts.js"></script>
+<script src="http://localhost:8081/fp-device.js"></script>
+<script src="http://localhost:8081/beacon.js"></script>
+<script src="http://localhost:8081/evasion.js"></script>
+
+<script src="/noise.js"></script>
+<script src="/probe.js"></script>
+<script src="/breakage.js"></script>
+<script src="/scenarios.js"></script>
+
+<script>
+(function () {
+  const list = document.getElementById('list');
+  const scenarios = window.__scenarios || [];
+  const этапы = [...new Set(scenarios.map((s) => s.этап))];
+  let активный = 'всё';
+
+  // ── фильтры по этапам ───────────────────────────────────────────────────
+  const filters = document.getElementById('filters');
+  for (const name of ['всё', ...этапы]) {
+    const b = document.createElement('button');
+    b.textContent = name;
+    b.className = 'filter' + (name === активный ? ' on' : '');
+    b.onclick = () => {
+      активный = name;
+      [...filters.children].forEach((c) => c.classList.toggle('on', c.textContent === name));
+      render();
+    };
+    filters.appendChild(b);
+  }
+
+  function показать(v) {
+    if (v === undefined) return 'undefined';
+    try {
+      return JSON.stringify(v, null, 2);
+    } catch (e) {
+      return String(v);
+    }
+  }
+
+  async function запустить(s, card) {
+    const out = card.querySelector('.out');
+    const badge = card.querySelector('.badge');
+    badge.textContent = 'идёт';
+    badge.className = 'badge running';
+    const t0 = performance.now();
+    try {
+      const r = await s.run();
+      const ms = (performance.now() - t0).toFixed(1);
+      badge.textContent = ms + ' мс';
+      badge.className = 'badge done';
+      out.textContent = показать(r);
+      out.hidden = false;
+    } catch (e) {
+      badge.textContent = 'ошибка';
+      badge.className = 'badge fail';
+      out.textContent = String((e && e.stack) || e);
+      out.hidden = false;
+    }
+  }
+
+  function render() {
+    list.textContent = '';
+    for (const s of scenarios) {
+      if (активный !== 'всё' && s.этап !== активный) continue;
+
+      const card = document.createElement('section');
+      card.className = 'card';
+      card.dataset.id = s.id;
+
+      const h = document.createElement('div');
+      h.className = 'head';
+      h.innerHTML =
+        '<span class="stage">' + s.этап + '</span>' +
+        '<span class="id">' + s.id + '</span>' +
+        '<span class="title"></span>' +
+        '<span class="badge"></span>';
+      h.querySelector('.title').textContent = s.title;
+      card.appendChild(h);
+
+      if (s.note) {
+        const n = document.createElement('p');
+        n.className = 'note';
+        n.textContent = s.note;
+        card.appendChild(n);
+      }
+
+      const exp = document.createElement('div');
+      exp.className = 'expect';
+      exp.innerHTML = '<div class="expect-h">Прибор обязан показать</div>';
+      const ul = document.createElement('ul');
+      for (const e of s.expect) {
+        const li = document.createElement('li');
+        li.textContent = e;
+        ul.appendChild(li);
+      }
+      exp.appendChild(ul);
+      card.appendChild(exp);
+
+      const btn = document.createElement('button');
+      btn.textContent = 'Выполнить';
+      btn.onclick = () => запустить(s, card);
+      card.appendChild(btn);
+
+      const out = document.createElement('pre');
+      out.className = 'out';
+      out.hidden = true;
+      card.appendChild(out);
+
+      list.appendChild(card);
+    }
+  }
+
+  document.getElementById('run-all').onclick = async () => {
+    for (const card of [...list.querySelectorAll('.card')]) {
+      const s = scenarios.find((x) => x.id === card.dataset.id);
+      await запустить(s, card);
+      await new Promise((r) => setTimeout(r, 120));
+    }
+  };
+
+  document.getElementById('show-received').onclick = async () => {
+    const box = document.getElementById('received');
+    const [a, b] = await Promise.all([
+      fetch('http://localhost:8080/__received').then((r) => r.json()),
+      fetch('http://localhost:8081/__received').then((r) => r.json()),
+    ]);
+    const all = [...a, ...b].sort((x, y) => x.at - y.at);
+    box.textContent =
+      'Стенд принял ' + all.length + ' обращений. Это независимое свидетельство:\n' +
+      'журнал прибора обязан совпасть с ним по составу.\n\n' +
+      JSON.stringify(all, null, 2);
+    box.hidden = false;
+    box.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  document.getElementById('reset').onclick = async () => {
+    await Promise.all([
+      fetch('http://localhost:8080/__reset'),
+      fetch('http://localhost:8081/__reset'),
+    ]);
+    document.getElementById('received').hidden = true;
+  };
+
+  render();
+})();
+</script>
+
+</body>
+</html>
