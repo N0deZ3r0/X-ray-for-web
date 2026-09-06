@@ -20,6 +20,8 @@
   .lab .verdict { margin-top: 10px; padding: 8px 10px; border-radius: 6px; background: #f3efe7; font-size: 13px; line-height: 1.5; }
   .lab .verdict.bad { background: #f7e2d6; }
   .lab .state { font: 12px ui-monospace, Consolas, monospace; color: #6b6559; }
+  .lab .next { font-size: 13px; margin: 6px 0 0; }
+  .lab .next.warn { background: #f7e2d6; border-radius: 6px; padding: 8px 10px; line-height: 1.5; }
   .lab .big { font-size: 13px; }
 </style>
 </head>
@@ -47,6 +49,7 @@
     <li>Сравнение появится, как только в обеих сериях будет хотя бы по 10 замеров.</li>
   </ol>
   <p class="state" id="state">—</p>
+  <p class="next" id="next"></p>
   <p>
     <button id="run" class="primary">Набрать 20 замеров</button>
     <button id="stop" hidden>Остановить</button>
