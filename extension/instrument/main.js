@@ -9,6 +9,12 @@
 (() => {
   'use strict';
 
+  // Момент старта. Установка обёрток лежит на критическом пути целиком: они
+  // обязаны встать до первого скрипта страницы. Замер LCP показал, что именно
+  // она, а не горячий путь, стоит прибору просадки — значит её надо знать
+  // числом, а не догадкой.
+  const T_СТАРТ = performance.now();
+
   const CHANNEL = '__xray_v1';
   const READY = '__xray_v1_ready';
 
@@ -74,6 +80,7 @@
     egressDropped: 0,
     surfacesInstalled: 0,
     surfacesFailed: [],
+    installMs: 0,
   };
 
   let degraded = false;
@@ -597,23 +604,35 @@
   const W = window;
   const proto = (name) => (W[name] ? W[name].prototype : null);
 
-  // Имена констант WebGL: без них getParameter(37446) ничего не говорит
-  const GL_NAMES = (() => {
-    const map = new Map();
+  // Имена констант WebGL: без них getParameter(37446) ничего не говорит.
+  //
+  // Строится ЛЕНИВО, при первом обращении. Раньше карта собиралась на старте, и
+  // это стоило 0.30 мс на критическом пути: перебор 863 свойств двух контекстов
+  // ради 544 констант. Нужна она только тем страницам, которые действительно
+  // зовут webgl.getParameter, — а платили за неё все, включая те, где WebGL не
+  // трогают вовсе.
+  //
+  // Замер LCP показал, что просадку прибору делает установка, а не вызовы.
+  // Значит всё, что можно с установки убрать, надо с неё убирать.
+  let GL_NAMES = null;
+
+  function glNames() {
+    if (GL_NAMES) return GL_NAMES;
+    GL_NAMES = new Map();
     for (const Ctor of [W.WebGLRenderingContext, W.WebGL2RenderingContext]) {
       if (!Ctor) continue;
       for (const k of Object.getOwnPropertyNames(Ctor)) {
         const v = Ctor[k];
-        if (typeof v === 'number' && /^[A-Z0-9_]+$/.test(k) && !map.has(v)) map.set(v, k);
+        if (typeof v === 'number' && /^[A-Z0-9_]+$/.test(k) && !GL_NAMES.has(v)) GL_NAMES.set(v, k);
       }
     }
     // Из WEBGL_debug_renderer_info: самые говорящие, но не константы контекста
-    map.set(37445, 'UNMASKED_VENDOR_WEBGL');
-    map.set(37446, 'UNMASKED_RENDERER_WEBGL');
-    return map;
-  })();
+    GL_NAMES.set(37445, 'UNMASKED_VENDOR_WEBGL');
+    GL_NAMES.set(37446, 'UNMASKED_RENDERER_WEBGL');
+    return GL_NAMES;
+  }
 
-  const glName = (v) => GL_NAMES.get(v) || '0x' + Number(v).toString(16);
+  const glName = (v) => glNames().get(v) || '0x' + Number(v).toString(16);
   const short = (v) => (v == null ? '' : String(v).slice(0, 120));
   const listLen = (v) => (v && v.length != null ? 'n:' + v.length : short(v));
 
@@ -1107,6 +1126,8 @@
   // ── Отметка о самом приборе ───────────────────────────────────────────────
   health.surfacesInstalled = installed.length;
   health.surfacesFailed = failed;
+  // Сколько прибор занял до того, как страница выполнила хоть строчку своего кода.
+  health.installMs = +(performance.now() - T_СТАРТ).toFixed(2);
 
   const at = performance.now();
   newRecord({

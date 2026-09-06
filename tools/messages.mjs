@@ -100,6 +100,7 @@ export const СТРОКИ = {
   health_stack_ms: ['На них ушло, мс', 'Time spent on them, ms'],
   health_counted: ['Счётчиком, без стека', 'Counted, no stack'],
   health_calls_per_sec: ['Вызовов в секунду', 'Calls per second'],
+  health_install_ms: ['Установка прибора, мс', 'Instrument setup, ms'],
   health_reconcile: [
     'Сверка источников: <b>$1</b> подтверждено обоими, <b class="mimo">$2</b> прошло мимо инструментации, <b>$3</b> не дошло до сети, <b>$4</b> нечем проверить (WebSocket), <b>$5</b> вне наблюдения — стили, скрипты, шрифты, картинки. Они посчитаны, но не показаны: обвинять их не в чем, а списком они утопили бы маячки.',
     'Source reconciliation: <b>$1</b> confirmed by both, <b class="mimo">$2</b> went past the instrumentation, <b>$3</b> never reached the network, <b>$4</b> cannot be checked (WebSocket), <b>$5</b> outside observation — styles, scripts, fonts, images. They are counted but not listed: there is nothing to accuse them of, and as a list they would drown the beacons.',

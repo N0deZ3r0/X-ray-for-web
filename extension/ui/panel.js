@@ -198,6 +198,10 @@
       [null, t('health_stack_ms'), h.coldMs != null ? h.coldMs : '—'],
       [null, t('health_counted'), h.hotCalls != null ? h.hotCalls : '—'],
       [null, t('health_calls_per_sec'), h.callsPerSecond != null ? h.callsPerSecond : '—'],
+      // Своя цена на видном месте. Замер LCP показал, что просадку прибору
+      // делает установка, а не вызовы, — значит это число человек должен
+      // видеть так же, как видит чужие.
+      [null, t('health_install_ms'), h.installMs != null ? h.installMs : '—'],
     ];
 
     el.textContent = '';
