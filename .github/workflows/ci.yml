@@ -1,24 +1,38 @@
-# One job, and deliberately so. This project has no dependencies, no build step and no
-# browser automation: every suite is a plain `node` process with `chrome` stubbed, and the
-# whole run takes under a second. Splitting that by cost would be splitting nothing.
+# Three jobs, split by what they cost and by what failing means.
 #
-# What CI actually guards here is the project's one hard rule — the instrument may not
-# state more than it recorded. tests/facts.test.mjs is the suite that enforces it: remove
-# an event, and the fact derived from it has to disappear. A green build means that rule
-# still holds; it does not mean the extension was loaded in a real Chrome, which no
-# runner here does.
+#   tests    the seven Node suites plus the two generator checks. Under a second,
+#            no dependencies, no browser. Runs on every push and every pull request,
+#            and gates the other two.
 #
-# Node is pinned to 24 rather than "latest" because the suites read the extension's own
-# source through node:vm and node:zlib. A floating major would turn a runtime change into
-# a red build that has nothing to do with this code.
+#   package  builds the extension zip and uploads it as the run's artifact, so what
+#            you download from a green build is the instrument rather than the
+#            workshop it was built in. Expires after 90 days.
 #
-# Actions pinned to v7: v4 declares `using: node20`, which GitHub deprecated in September
-# 2025 — it still runs, forced onto Node 24, and annotates every job with a warning.
+#   release  the same zip, attached to a GitHub Release. Tag-triggered, permanent,
+#            and its URL does not move. This is the one to link to.
+#
+# What CI actually guards here is the project's one hard rule — the instrument may
+# not state more than it recorded. tests/facts.test.mjs enforces it: remove an
+# event, and the fact derived from it has to disappear. A green build means that
+# rule still holds; it does not mean the extension was loaded in a real Chrome,
+# which no runner here does.
+#
+# Node is pinned to 24 rather than "latest" because the suites read the extension's
+# own source through node:vm and node:zlib. A floating major would turn a runtime
+# change into a red build that has nothing to do with this code.
+#
+# Actions pinned to v7: v4 declares `using: node20`, which GitHub deprecated in
+# September 2025 — it still runs, forced onto Node 24, and annotates every job with
+# a warning.
 name: CI
 
 on:
   push:
     branches: [main]
+    # A tag is what publishes a release. `tests` still runs first on that push, so a
+    # tag can only become a release if the suites passed on exactly the commit being
+    # released.
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
@@ -34,10 +48,19 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
-      # No `npm ci`: there is no package.json and no lockfile, by design. The absence of
-      # dependencies is itself a claim the README makes, and this line is what keeps it
-      # honest — if one ever appears, this step will not install it.
+      # No `npm ci`: there is no package.json and no lockfile, by design. The
+      # absence of dependencies is itself a claim the README makes, and this line
+      # is what keeps it honest — if one ever appears, this step will not install it.
       - run: node tests/run.mjs
+
+      # The icons are generated, not drawn. Regenerating them must produce
+      # byte-identical files; if it does not, either the generator changed without
+      # the icons being rebuilt, or the icons were edited by hand and the generator
+      # no longer describes what ships.
+      - name: icons are reproducible
+        run: |
+          node tools/icons.mjs
+          git diff --exit-code -- extension/icons
 
       # The locale files are generated from tools/messages.mjs, where the two
       # languages sit side by side. Regenerating must change nothing: if it does,
@@ -49,11 +72,55 @@ jobs:
           node tools/messages.mjs
           git diff --exit-code -- extension/_locales
 
-      # The icons are generated, not drawn. Regenerating them must produce byte-identical
-      # files; if it does not, either the generator changed without the icons being
-      # rebuilt, or the icons were edited by hand and the generator no longer describes
-      # what ships.
-      - name: icons are reproducible
+  package:
+    name: extension zip
+    # After `tests`, not instead of it: pack.mjs verifies completeness, not
+    # correctness. It will happily package a build whose logic is broken.
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - run: node tools/pack.mjs
+      - uses: actions/upload-artifact@v7
+        with:
+          name: x-ray-for-web
+          path: dist/*.zip
+          if-no-files-found: error
+
+  release:
+    name: release
+    needs: tests
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    # The only job that writes anything back to GitHub, and the only one granted
+    # permission to.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - run: node tools/pack.mjs
+
+      # The tag says which version is being released; the manifest says which
+      # version the code thinks it is. If they disagree, someone tagged the wrong
+      # commit, and a release named after a version it does not contain is worse
+      # than no release.
+      - name: tag matches the manifest version
         run: |
-          node tools/icons.mjs
-          git diff --exit-code -- extension/icons
+          TAG="${GITHUB_REF_NAME#v}"
+          MANIFEST=$(node -e "process.stdout.write(require('./extension/manifest.json').version)")
+          echo "tag=$TAG manifest=$MANIFEST"
+          test "$TAG" = "$MANIFEST"
+
+      - name: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/*.zip \
+            --title "$GITHUB_REF_NAME" \
+            --notes "Unpacked extension for Chrome 119+. Download the zip, extract it, then chrome://extensions → Developer mode → Load unpacked → point at the extracted folder. Built by CI from the tagged commit."

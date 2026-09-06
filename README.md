@@ -7,7 +7,7 @@
 [![CI](https://github.com/N0deZ3r0/X-ray-for-web/actions/workflows/ci.yml/badge.svg)](https://github.com/N0deZ3r0/X-ray-for-web/actions/workflows/ci.yml)
 ![version](https://img.shields.io/badge/version-0.1.0-3b5bdb)
 ![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-4c6ef5)
-![checks](https://img.shields.io/badge/checks-207-2f9e44)
+![checks](https://img.shields.io/badge/checks-214-2f9e44)
 ![runtime dependencies](https://img.shields.io/badge/runtime_dependencies-0-2f9e44)
 
 **English** · [Русский](README.ru.md)
@@ -58,11 +58,15 @@ and the wrappers did not is an evasion, and it is named as one.
 
 Not in the Chrome Web Store — load it unpacked.
 
-1. Download this repository (`Code → Download ZIP`, or `git clone`).
+1. Download the zip from [Releases](https://github.com/N0deZ3r0/X-ray-for-web/releases/latest)
+   and extract it. CI builds it from the commit the tag points at, and it contains the
+   extension only: no bench, no suites, no generators.
 2. Open `chrome://extensions`.
 3. Turn on **Developer mode** (top right).
-4. Click **Load unpacked** and point it at the `extension` folder — that folder, not the
-   repository root.
+4. Click **Load unpacked** and point it at the extracted folder.
+
+To run from source instead, clone the repository and point **Load unpacked** at its
+`extension` folder — that folder, not the repository root.
 
 Chrome 119 or newer.
 
@@ -136,7 +140,7 @@ Open http://localhost:8080. A full run produces exactly 10 network requests: 7 a
 node tests/run.mjs
 ```
 
-**207 checks** in seven suites, with no dependencies at all — plain `node`. The most
+**214 checks** in seven suites, with no dependencies at all — plain `node`. The most
 important one is not the parser suite but `tests/facts.test.mjs`: remove an event, and the
 fact derived from it must disappear. The instrument has no right to state what it did not
 record.
@@ -194,7 +198,7 @@ extension/     the extension itself (this is the folder Chrome loads)
 bench/         the bench: deliberate fingerprinting across two origins
 docs/          foundation documents
 tests/         suites, run by plain node
-tools/         generators: the icons and the two locale files
+tools/         generators: icons, locale files, release zip
 ```
 
 ## Platform
