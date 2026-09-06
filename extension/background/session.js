@@ -164,9 +164,14 @@ export function applyRecords(session, sender, records, instrumentHealth, bridge)
       session.health.instrumentedFrames++;
       // Знаменатель для свода: что прибор вообще способен увидеть
       if (Array.isArray(r.surfaces) && !session.installedSurfaces) {
+        // Перекрытая на экземпляре обёртка стоит, но вызовы идут мимо неё.
+        // Помечаем сразу: знаменатель свода обязан считать наблюдаемым только
+        // то, что действительно наблюдается (предел 3б).
+        const перекрытые = new Set(r.shadowed || []);
         session.installedSurfaces = r.surfaces.map((имя, i) => ({
           surface: имя,
           group: (r.surfaceGroups || [])[i] || null,
+          shadowed: перекрытые.has(имя),
         }));
       }
     }

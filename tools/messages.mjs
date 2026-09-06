@@ -118,6 +118,10 @@ export const СТРОКИ = {
     'The detail budget is spent. Further calls are counted but not attributed to a script: a stack capture costs about 25 µs, and without a ceiling the instrument would visibly slow the page down.',
   ],
   health_collapsed: ['Схлопнуты до счётчика: $1', 'Collapsed into counters: $1'],
+  health_shadowed: [
+    'Обёртка перекрыта на экземпляре: $1. Кто-то — почти наверняка другое расширение — положил собственное свойство поверх нашего, и эти поверхности не наблюдаются, хотя обёрнуты. Проверено только для объектов, существующих в единственном числе: у контекстов canvas и WebGL узнать это заранее нельзя (предел 3б).',
+    'Wrapper shadowed on the instance: $1. Someone — almost certainly another extension — put an own property on top of ours, so these surfaces are not observed even though they are wrapped. Checked only for objects that exist as a single instance: for canvas and WebGL contexts this cannot be known in advance (limit 3b).',
+  ],
   health_wrap_failed: [
     'Не удалось обернуть: $1. По этим поверхностям прибор слеп.',
     'Could not wrap: $1. The instrument is blind on these surfaces.',

@@ -146,6 +146,9 @@
   "health_collapsed": {
     "message": "Collapsed into counters: $1"
   },
+  "health_shadowed": {
+    "message": "Wrapper shadowed on the instance: $1. Someone — almost certainly another extension — put an own property on top of ours, so these surfaces are not observed even though they are wrapped. Checked only for objects that exist as a single instance: for canvas and WebGL contexts this cannot be known in advance (limit 3b)."
+  },
   "health_wrap_failed": {
     "message": "Could not wrap: $1. The instrument is blind on these surfaces."
   },

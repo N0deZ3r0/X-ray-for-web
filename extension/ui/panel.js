@@ -278,6 +278,16 @@
         t('health_wrap_failed', h.surfacesFailed.join(', '));
       el.appendChild(w);
     }
+
+    // Обёрнута, но перекрыта на экземпляре: обёртка стоит, а вызовы идут мимо.
+    // Это ровно тот случай, когда «обёрнуто 73» говорит больше, чем прибор
+    // знает, — предел 3б.
+    if (h.surfacesShadowed && h.surfacesShadowed.length) {
+      const w2 = document.createElement('div');
+      w2.className = 'warn';
+      w2.textContent = t('health_shadowed', h.surfacesShadowed.join(', '));
+      el.appendChild(w2);
+    }
     if (session.truncated) {
       const w = document.createElement('div');
       w.className = 'warn';
