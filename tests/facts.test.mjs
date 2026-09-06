@@ -10,16 +10,16 @@
 //
 // Запуск: node tests/facts.test.mjs
 
-import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { загрузить, поставитьI18n } from './lib/zagruzka.mjs';
 
-const dir = join(tmpdir(), 'xray-facts-tests');
-mkdirSync(dir, { recursive: true });
-const copy = join(dir, 'facts.mjs');
-writeFileSync(copy, readFileSync(new URL('../extension/background/facts.js', import.meta.url)));
-const F = await import(pathToFileURL(copy).href);
+// Строки берутся из настоящего источника переводов: если факт сошлётся на
+// несуществующий ключ, вместо фразы придёт «[ключ]» и проверка упадёт. Так
+// набор заодно сторожит, что перевод не отстал от кода.
+await поставитьI18n('ru');
+const { модуль: F, убрать } = await загрузить('facts-tests', [
+  'extension/background/facts.js',
+  'extension/background/i18n.js',
+]);
 
 // ── Сессия, похожая на прогон стенда ────────────────────────────────────────
 
@@ -319,5 +319,5 @@ for (const [имя, ок, факт] of проверки) {
 }
 console.log('');
 console.log(провал ? провал + ' проверок провалено' : 'все ' + проверки.length + ' проверок пройдены');
-rmSync(dir, { recursive: true, force: true });
+убрать();
 process.exit(провал ? 1 : 0);

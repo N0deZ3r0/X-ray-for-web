@@ -1,199 +1,20 @@
 {
   "id": "yandex-metrika-bench",
-  "title": "Яндекс.Метрика (стенд)",
+  "extends": "yandex-metrika",
+  "title": {
+    "ru": "Яндекс.Метрика (стенд)",
+    "en": "Яндекс.Метрика (bench)"
+  },
   "version": "2026-09",
-  "note": "Яндекс не публикует список параметров /watch. Поля получены наблюдением. Начинка упакована в один параметр browser-info строкой вида «ключ:значение:ключ:значение» — движок разбирает её парами и останавливается, если разбор рассинхронизировался.",
+  "note": {
+    "ru": "Двойник для стенда: те же поля, другой адрес. Всё, кроме match, наследуется от «yandex-metrika» — копия правилась бы отдельно и однажды разошлась бы.",
+    "en": "Bench twin: the same fields, a different address. Everything except match is inherited from the parent declaration — a copy would be edited separately and would drift apart one day."
+  },
   "match": {
     "host": [
       "localhost",
       "127.0.0.1"
     ],
     "path": "^/watch/"
-  },
-  "extract": [
-    {
-      "from": "path",
-      "pattern": "^/watch/(\\d+)",
-      "names": [
-        "counter"
-      ]
-    },
-    {
-      "from": "query"
-    }
-  ],
-  "nested": [
-    {
-      "param": "browser-info",
-      "format": "colon-pairs",
-      "title": "Что внутри browser-info"
-    }
-  ],
-  "fields": {
-    "counter": {
-      "label": "Номер счётчика Метрики",
-      "kind": "site-id",
-      "confidence": "observed",
-      "note": "Кому именно уходят данные"
-    },
-    "page-url": {
-      "label": "Адрес страницы",
-      "kind": "page-url",
-      "confidence": "observed"
-    },
-    "page-ref": {
-      "label": "Откуда вы пришли",
-      "kind": "referrer",
-      "confidence": "observed"
-    },
-    "charset": {
-      "label": "Кодировка страницы",
-      "kind": "technical",
-      "confidence": "observed"
-    },
-    "browser-info": {
-      "label": "Упакованные сведения о браузере",
-      "kind": "technical",
-      "confidence": "observed",
-      "note": "Содержимое распаковано ниже отдельной группой"
-    },
-    "site-info": {
-      "label": "Параметры визита, заданные сайтом",
-      "kind": "event-param",
-      "confidence": "observed",
-      "note": "Сайт кладёт сюда что угодно — от раздела каталога до вашего статуса в его системе"
-    },
-    "ut": {
-      "label": "Признак отказа от отслеживания",
-      "kind": "technical",
-      "confidence": "observed"
-    },
-    "t": {
-      "label": "Заголовок страницы",
-      "kind": "page-title",
-      "confidence": "observed"
-    },
-    "rn": {
-      "label": "Случайное число запроса",
-      "kind": "nonce",
-      "confidence": "observed"
-    },
-    "wmode": {
-      "label": "Режим отправки",
-      "kind": "technical",
-      "confidence": "observed"
-    },
-    "u": {
-      "label": "Идентификатор вашего браузера",
-      "kind": "device-id",
-      "confidence": "observed",
-      "note": "Берётся из куки _ym_uid, живёт два года и связывает все ваши визиты"
-    },
-    "uid": {
-      "label": "Ваш идентификатор в системе сайта",
-      "kind": "user-id",
-      "confidence": "observed"
-    },
-    "s": {
-      "label": "Разрешение экрана и глубина цвета",
-      "kind": "screen",
-      "confidence": "observed"
-    },
-    "w": {
-      "label": "Размер окна браузера",
-      "kind": "screen",
-      "confidence": "observed"
-    },
-    "z": {
-      "label": "Часовой пояс, минут от UTC",
-      "kind": "timezone",
-      "confidence": "observed"
-    },
-    "la": {
-      "label": "Язык браузера",
-      "kind": "language",
-      "confidence": "observed"
-    },
-    "en": {
-      "label": "Кодировка",
-      "kind": "technical",
-      "confidence": "observed"
-    },
-    "c": {
-      "label": "Разрешены ли куки",
-      "kind": "technical",
-      "confidence": "observed"
-    },
-    "ln": {
-      "label": "Язык интерфейса системы",
-      "kind": "language",
-      "confidence": "observed"
-    },
-    "pv": {
-      "label": "Просмотр страницы",
-      "kind": "event-name",
-      "confidence": "observed"
-    },
-    "ar": {
-      "label": "Признак повторного визита",
-      "kind": "technical",
-      "confidence": "observed"
-    },
-    "vf": {
-      "label": "Метка визита",
-      "kind": "session-id",
-      "confidence": "observed"
-    },
-    "et": {
-      "label": "Время отправки",
-      "kind": "timing",
-      "confidence": "observed"
-    },
-    "st": {
-      "label": "Секунд с начала визита",
-      "kind": "timing",
-      "confidence": "observed"
-    },
-    "ds": {
-      "label": "Тайминги загрузки страницы",
-      "kind": "timing",
-      "confidence": "observed"
-    },
-    "nsr": {
-      "label": "Признак отсутствия перехода",
-      "kind": "technical",
-      "confidence": "observed"
-    },
-    "fp": {
-      "label": "Время первой отрисовки",
-      "kind": "timing",
-      "confidence": "observed"
-    },
-    "cn": {
-      "label": "Номер обращения",
-      "kind": "technical",
-      "confidence": "observed"
-    },
-    "rqnl": {
-      "label": "Признак сетевой доступности",
-      "kind": "technical",
-      "confidence": "observed"
-    },
-    "ti": {
-      "label": "Номер обращения в визите",
-      "kind": "technical",
-      "confidence": "observed"
-    },
-    "adb": {
-      "label": "Обнаружен ли блокировщик рекламы",
-      "kind": "technical",
-      "confidence": "observed"
-    },
-    "ds1": {
-      "label": "Дополнительные тайминги",
-      "kind": "timing",
-      "confidence": "observed"
-    }
-  },
-  "unknown": "preserve"
+  }
 }

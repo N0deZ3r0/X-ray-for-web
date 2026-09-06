@@ -6,16 +6,13 @@
 //
 // Запуск: node tests/export.test.mjs
 
-import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { загрузить, поставитьI18n } from './lib/zagruzka.mjs';
 
-const dir = join(tmpdir(), 'xray-export-tests');
-mkdirSync(dir, { recursive: true });
-const copy = join(dir, 'export.mjs');
-writeFileSync(copy, readFileSync(new URL('../extension/background/export.js', import.meta.url)));
-const E = await import(pathToFileURL(copy).href);
+await поставитьI18n('ru');
+const { модуль: E, убрать } = await загрузить('export-tests', [
+  'extension/background/export.js',
+  'extension/background/i18n.js',
+]);
 
 // ── Заведомые секреты ───────────────────────────────────────────────────────
 // Каждый из них тест потом ищет в выводе.
@@ -126,6 +123,10 @@ const свод = {
     },
     {
       id: 'egress:device-id|www.google-analytics.com',
+      // Вид поля, из которого выведен факт. Именно по нему экспорт решает,
+      // вырезать ли значение: раньше решение принималось по русским словам в
+      // тексте, и на английском не вырезалось бы ничего.
+      kind: 'device-id',
       text: 'В www.google-analytics.com ушёл идентификатор вашего устройства',
       value: СЕКРЕТЫ.идентификаторУстройства,
       note: null,
@@ -243,5 +244,5 @@ for (const [имя, ок, факт] of проверки) {
 }
 console.log('');
 console.log(провал ? провал + ' проверок провалено' : 'все ' + проверки.length + ' проверок пройдены');
-rmSync(dir, { recursive: true, force: true });
+убрать();
 process.exit(провал ? 1 : 0);

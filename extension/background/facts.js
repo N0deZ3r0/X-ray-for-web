@@ -13,6 +13,8 @@
 // наблюдаемых». Первое требует распределения по популяции, которого у прибора
 // нет; второе он измерил.
 
+import { t, n as скл } from './i18n.js';
+
 // Поверхности, которые считаются съёмом отпечатка. Группы shadow, egress и meta
 // сюда не входят: создание воркера — не отпечаток, а контекст.
 const ГРУППЫ_ОТПЕЧАТКА = new Set(['canvas', 'webgl', 'audio', 'fonts', 'device', 'hardware']);
@@ -26,102 +28,102 @@ const ПРАВИЛА = [
   {
     id: 'gpu',
     когда: (e) => e.surface === 'webgl.getParameter' && /UNMASKED_RENDERER/.test(e.arg || ''),
-    текст: 'Сайт узнал модель вашей видеокарты',
+    текст: t('fact_gpu_model'),
     значение: (e) => e.result,
   },
   {
     id: 'gpu-vendor',
     когда: (e) => e.surface === 'webgl.getParameter' && /UNMASKED_VENDOR/.test(e.arg || ''),
-    текст: 'Сайт узнал производителя вашей видеокарты',
+    текст: t('fact_gpu_vendor'),
     значение: (e) => e.result,
   },
   {
     id: 'timezone',
     когда: (e) => e.surface === 'intl.resolvedOptions' && e.result,
-    текст: 'Сайт узнал ваш часовой пояс',
+    текст: t('fact_timezone'),
     значение: (e) => e.result,
   },
   {
     id: 'cores',
     когда: (e) => e.surface === 'navigator.hardwareConcurrency',
-    текст: 'Сайт узнал, сколько ядер у вашего процессора',
+    текст: t('fact_cores'),
     значение: (e) => e.result,
   },
   {
     id: 'memory',
     когда: (e) => e.surface === 'navigator.deviceMemory',
-    текст: 'Сайт узнал, сколько у вас оперативной памяти',
-    значение: (e) => (e.result ? e.result + ' ГБ' : null),
+    текст: t('fact_memory'),
+    значение: (e) => (e.result ? e.result + t('fact_memory_unit') : null),
   },
   {
     id: 'platform',
     когда: (e) => e.surface === 'navigator.platform',
-    текст: 'Сайт узнал вашу операционную систему',
+    текст: t('fact_os'),
     значение: (e) => e.result,
   },
   {
     id: 'screen',
     когда: (e) => e.surface === 'screen.width' || e.surface === 'screen.height',
-    текст: 'Сайт узнал размер вашего экрана',
+    текст: t('fact_screen'),
     значение: (e, все) => {
       const w = все.find((x) => x.surface === 'screen.width' && x.result);
       const h = все.find((x) => x.surface === 'screen.height' && x.result);
-      if (w && h) return w.result + ' на ' + h.result;
+      if (w && h) return w.result + t('fact_screen_by') + h.result;
       return (w || h || e).result;
     },
   },
   {
     id: 'ua-hints',
     когда: (e) => e.surface === 'navigator.getHighEntropyValues',
-    текст: 'Сайт запросил точную модель платформы и версии браузера',
+    текст: t('fact_ua_hints'),
     значение: (e) => e.arg,
-    примечание: 'Это высокоэнтропийные подсказки User-Agent: они сужают круг машин сильнее обычного',
+    примечание: t('fact_ua_hints_note'),
   },
   {
     id: 'canvas',
     когда: (e) => e.surface === 'canvas.toDataURL' || e.surface === 'canvas.toBlob',
-    текст: 'Сайт снял отпечаток изображения через canvas',
+    текст: t('fact_canvas'),
     значение: () => null,
   },
   {
     id: 'canvas-pixels',
     когда: (e) => e.surface === 'canvas.getImageData',
-    текст: 'Сайт считывал пиксели с canvas напрямую',
-    значение: (e) => (e.count > 1 ? склонение(e.count, 'раз', 'раза', 'раз') : null),
+    текст: t('fact_canvas_pixels'),
+    значение: (e) => (e.count > 1 ? скл(e.count, 'plural_time') : null),
   },
   {
     id: 'audio',
     когда: (e) => e.group === 'audio',
-    текст: 'Сайт снял аудиоотпечаток',
+    текст: t('fact_audio'),
     значение: () => null,
   },
   {
     id: 'fonts',
     когда: (e) => e.surface === 'fonts.check' || e.surface === 'canvas.measureText',
-    текст: 'Сайт перебирал шрифты, установленные на вашей машине',
+    текст: t('fact_fonts'),
     значение: (e, все) => {
       const n = все.reduce((s, x) => s + (x.count || 1), 0);
-      return склонение(n, 'измерение', 'измерения', 'измерений');
+      return скл(n, 'plural_measurement');
     },
   },
   {
     id: 'webrtc',
     когда: (e) => e.surface === 'webrtc.RTCPeerConnection',
-    текст: 'Сайт запросил ваш локальный сетевой адрес через WebRTC',
+    текст: t('fact_webrtc'),
     значение: () => null,
   },
   {
     id: 'media',
     когда: (e) => e.surface === 'media.enumerateDevices',
-    текст: 'Сайт запросил список ваших камер и микрофонов',
+    текст: t('fact_devices'),
     значение: (e) => e.result,
   },
   {
     id: 'voices',
     когда: (e) => e.surface === 'speech.getVoices',
-    текст: 'Сайт запросил список голосов синтеза речи',
+    текст: t('fact_voices'),
     значение: (e) => e.result,
-    примечание: 'Набор голосов сильно зависит от системы и потому хорошо различает машины',
+    примечание: t('fact_voices_note'),
   },
   {
     id: 'cookie-id',
@@ -129,21 +131,21 @@ const ПРАВИЛА = [
     // Назвать его «поставил долгоживущий идентификатор» было бы неправдой:
     // на живом сайте так стирают старые счётчики перед записью новых.
     когда: (e) => e.surface === 'cookie.write' && !удалениеКуки(e.arg),
-    текст: 'Сайт поставил вам долгоживущий идентификатор в куки',
+    текст: t('fact_cookie_id'),
     значение: (e) => e.arg,
   },
   {
     id: 'storage-id',
     когда: (e) => e.surface === 'localStorage.setItem',
-    текст: 'Сайт записал данные в хранилище браузера',
+    текст: t('fact_storage'),
     значение: (e) => e.arg,
   },
   {
     id: 'worker',
     когда: (e) => e.surface === 'shadow.Worker' || e.surface === 'shadow.SharedWorker',
-    текст: 'Сайт запустил фоновый поток',
+    текст: t('fact_worker'),
     значение: (e) => e.arg,
-    примечание: 'Что происходит внутри воркера, прибор не видит — предел 4',
+    примечание: t('fact_worker_note'),
   },
 ];
 
@@ -179,31 +181,29 @@ function хост(url) {
 
 const ПО_ВИДУ_ПОЛЯ = {
   'device-id': {
-    текст: (кому) => 'В ' + кому + ' ушёл идентификатор вашего устройства',
-    примечание: 'Он связывает разные ваши визиты между собой',
+    текст: (кому) => t('fact_out_device_id', кому),
+    примечание: t('fact_out_device_id_note'),
   },
   'user-id': {
-    текст: (кому) => 'В ' + кому + ' ушёл ваш идентификатор в системе сайта',
-    примечание: 'Это связывает визит с вашей учётной записью, а не только с браузером',
+    текст: (кому) => t('fact_out_user_id', кому),
+    примечание: t('fact_out_user_id_note'),
   },
   'email-hash': {
-    текст: (кому) => 'В ' + кому + ' ушёл хеш вашего адреса электронной почты',
-    примечание: 'Хеш не расшифровывается, но одинаков на всех сайтах и потому связывает их',
+    текст: (кому) => t('fact_out_email', кому),
+    примечание: t('fact_out_email_note'),
   },
   'phone-hash': {
-    текст: (кому) => 'В ' + кому + ' ушёл хеш вашего номера телефона',
+    текст: (кому) => t('fact_out_phone', кому),
   },
   'personal-hash': {
-    текст: (кому) => 'В ' + кому + ' ушли хеши ваших личных данных',
-    примечание:
-      'Пол, дата рождения, город, индекс — по отдельности мало что значат, ' +
-      'вместе опознают человека',
+    текст: (кому) => t('fact_out_personal', кому),
+    примечание: t('fact_out_personal_note'),
   },
   'referrer': {
-    текст: (кому) => 'В ' + кому + ' ушло, откуда вы пришли на эту страницу',
+    текст: (кому) => t('fact_out_referrer', кому),
   },
   'page-url': {
-    текст: (кому) => 'В ' + кому + ' ушёл адрес страницы, которую вы смотрите',
+    текст: (кому) => t('fact_out_page_url', кому),
   },
 };
 
@@ -249,9 +249,7 @@ export function выводитьФакты(session) {
     // В счёт они идут, но об этом надо сказать, а не умолчать.
     const безИсточника = подходящие.length - улики.length;
     const оговорка = безИсточника
-      ? 'Ещё ' +
-        склонение(безИсточника, 'вызов', 'вызова', 'вызовов') +
-        ' к источнику привязать не удалось'
+      ? t('fact_unattributed', скл(безИсточника, 'plural_call'))
       : null;
 
     факты.push({
@@ -279,6 +277,10 @@ export function выводитьФакты(session) {
         if (!поПолучателю.has(ключ)) {
           поПолучателю.set(ключ, {
             id: 'egress:' + ключ,
+            // Вид поля, из которого выведен факт. По нему — и только по нему —
+            // экспорт решает, вырезать ли значение. Слова показа для этого
+            // негодны: они переводятся, а безопасность переводиться не должна.
+            kind: f.kind,
             text: шаблон.текст(кому),
             value: f.value || null,
             note: шаблон.примечание || null,
@@ -310,11 +312,10 @@ export function выводитьФакты(session) {
   if (записьДействий.length) {
     факты.push({
       id: 'session-recording',
-      text: 'Сайт записывает ваши действия на странице',
+      text: t('fact_webvisor'),
       value: хост(записьДействий[0].url),
       note:
-        'Движения мыши, прокрутку, клики и ввод в поля. Запись можно потом ' +
-        'просмотреть как видео. Что именно попало в запись, прибор не видит',
+        t('fact_webvisor_note'),
       recipient: хост(записьДействий[0].url),
       evidence: записьДействий.map((e) => e.id),
     });
@@ -328,11 +329,10 @@ export function выводитьФакты(session) {
     const кто = [...new Set(отРасширений.map((e) => e.attribution.viaExtension))];
     факты.push({
       id: 'extensions',
-      text: 'Ваши данные читал не только сайт, но и другое расширение в браузере',
+      text: t('fact_other_extension'),
       value: кто.join(', '),
       note:
-        'Отличить, действует расширение само или по просьбе страницы, прибор не может. ' +
-        'Эти обращения не засчитаны сайту.',
+        t('fact_other_extension_note'),
       recipient: null,
       evidence: отРасширений.map((e) => e.id),
     });
@@ -343,9 +343,9 @@ export function выводитьФакты(session) {
   if (обходы.length) {
     факты.push({
       id: 'evasion',
-      text: 'Часть запросов прошла мимо инструментации',
-      value: склонение(обходы.length, 'запрос', 'запроса', 'запросов'),
-      note: 'Прибор не может сказать, кто их отправил, — только что они были',
+      text: t('fact_evasion'),
+      value: скл(обходы.length, 'plural_request'),
+      note: t('fact_evasion_note'),
       recipient: null,
       evidence: обходы.map((e) => e.id),
     });

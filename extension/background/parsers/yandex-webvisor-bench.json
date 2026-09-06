@@ -1,53 +1,20 @@
 {
   "id": "yandex-webvisor-bench",
-  "title": "Яндекс.Вебвизор — запись действий (стенд)",
+  "extends": "yandex-webvisor",
+  "title": {
+    "ru": "Яндекс.Вебвизор — запись действий (стенд)",
+    "en": "Яндекс.Вебвизор — запись действий (bench)"
+  },
   "version": "2026-09",
-  "note": "Вебвизор пишет движения мыши, прокрутку, клики и ввод в поля. Это не разновидность аналитики, а запись сеанса, и показывается отдельной строкой.",
+  "note": {
+    "ru": "Двойник для стенда: те же поля, другой адрес. Всё, кроме match, наследуется от «yandex-webvisor» — копия правилась бы отдельно и однажды разошлась бы.",
+    "en": "Bench twin: the same fields, a different address. Everything except match is inherited from the parent declaration — a copy would be edited separately and would drift apart one day."
+  },
   "match": {
     "host": [
       "localhost",
       "127.0.0.1"
     ],
     "path": "^/webvisor"
-  },
-  "extract": [
-    {
-      "from": "path",
-      "pattern": "^/webvisor/(\\d+)",
-      "names": [
-        "counter"
-      ]
-    },
-    {
-      "from": "query"
-    }
-  ],
-  "fields": {
-    "counter": {
-      "label": "Номер счётчика, который ведёт запись",
-      "kind": "site-id",
-      "confidence": "observed"
-    },
-    "page-url": {
-      "label": "Адрес записываемой страницы",
-      "kind": "page-url",
-      "confidence": "observed"
-    },
-    "rn": {
-      "label": "Случайное число запроса",
-      "kind": "nonce",
-      "confidence": "observed"
-    },
-    "wv-part": {
-      "label": "Номер части записи",
-      "kind": "technical",
-      "confidence": "observed"
-    },
-    "wv-type": {
-      "label": "Тип передаваемых данных записи",
-      "kind": "technical",
-      "confidence": "observed"
-    }
-  },
-  "unknown": "preserve"
+  }
 }

@@ -2,9 +2,11 @@
   "manifest_version": 3,
   "name": "X-ray for web",
   "version": "0.1.0",
-  "description": "An instrument, not a blocker. Shows which script read which fingerprinting surface, and parses outgoing beacons field by field.",
+  "description": "__MSG_ext_description__",
 
   "minimum_chrome_version": "119",
+
+  "default_locale": "en",
 
   "permissions": ["storage", "scripting", "sidePanel", "tabs", "webRequest"],
 

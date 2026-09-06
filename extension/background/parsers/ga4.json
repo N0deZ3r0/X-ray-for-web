@@ -1,6 +1,9 @@
 {
   "id": "ga4",
-  "title": "Google Analytics 4",
+  "title": {
+    "ru": "Google Analytics 4",
+    "en": "Google Analytics 4"
+  },
   "version": "2026-09",
   "match": {
     "host": [
@@ -21,205 +24,358 @@
   ],
   "fields": {
     "tid": {
-      "label": "Идентификатор счётчика сайта",
+      "label": {
+        "ru": "Идентификатор счётчика сайта",
+        "en": "Site measurement id"
+      },
       "kind": "site-id",
       "confidence": "documented",
-      "note": "Кому именно уходят данные"
+      "note": {
+        "ru": "Кому именно уходят данные",
+        "en": "Exactly who the data goes to"
+      }
     },
     "cid": {
-      "label": "Идентификатор вашего браузера",
+      "label": {
+        "ru": "Идентификатор вашего браузера",
+        "en": "Your browser identifier"
+      },
       "kind": "device-id",
       "confidence": "documented",
-      "note": "Берётся из куки _ga, живёт два года. Связывает все ваши визиты на этот сайт"
+      "note": {
+        "ru": "Берётся из куки _ga, живёт два года. Связывает все ваши визиты на этот сайт",
+        "en": "Taken from the _ga cookie, lives two years. Ties together every visit you make to this site"
+      }
     },
     "sid": {
-      "label": "Идентификатор сессии",
+      "label": {
+        "ru": "Идентификатор сессии",
+        "en": "Session identifier"
+      },
       "kind": "session-id",
       "confidence": "documented"
     },
     "sct": {
-      "label": "Какая это по счёту ваша сессия",
+      "label": {
+        "ru": "Какая это по счёту ваша сессия",
+        "en": "Which numbered session of yours this is"
+      },
       "kind": "session-id",
       "confidence": "documented"
     },
     "uid": {
-      "label": "Ваш идентификатор в системе сайта",
+      "label": {
+        "ru": "Ваш идентификатор в системе сайта",
+        "en": "Your identifier in the site’s own system"
+      },
       "kind": "user-id",
       "confidence": "documented",
-      "note": "Сайт передал собственный идентификатор пользователя — это связывает визит с вашей учётной записью"
+      "note": {
+        "ru": "Сайт передал собственный идентификатор пользователя — это связывает визит с вашей учётной записью",
+        "en": "The site sent its own user id — this ties the visit to your account"
+      }
     },
     "en": {
-      "label": "Название события",
+      "label": {
+        "ru": "Название события",
+        "en": "Event name"
+      },
       "kind": "event-name",
       "confidence": "documented"
     },
     "dl": {
-      "label": "Адрес страницы",
+      "label": {
+        "ru": "Адрес страницы",
+        "en": "Page address"
+      },
       "kind": "page-url",
       "confidence": "documented"
     },
     "dr": {
-      "label": "Откуда вы пришли",
+      "label": {
+        "ru": "Откуда вы пришли",
+        "en": "Where you came from"
+      },
       "kind": "referrer",
       "confidence": "documented",
-      "note": "Предыдущая страница или поисковый запрос"
+      "note": {
+        "ru": "Предыдущая страница или поисковый запрос",
+        "en": "The previous page or the search query"
+      }
     },
     "dt": {
-      "label": "Заголовок страницы",
+      "label": {
+        "ru": "Заголовок страницы",
+        "en": "Page title"
+      },
       "kind": "page-title",
       "confidence": "documented"
     },
     "ul": {
-      "label": "Язык браузера",
+      "label": {
+        "ru": "Язык браузера",
+        "en": "Browser language"
+      },
       "kind": "language",
       "confidence": "documented"
     },
     "sr": {
-      "label": "Разрешение экрана",
+      "label": {
+        "ru": "Разрешение экрана",
+        "en": "Screen resolution"
+      },
       "kind": "screen",
       "confidence": "documented"
     },
     "_et": {
-      "label": "Сколько времени вы провели на странице, мс",
+      "label": {
+        "ru": "Сколько времени вы провели на странице, мс",
+        "en": "How long you spent on the page, ms"
+      },
       "kind": "timing",
       "confidence": "observed"
     },
     "v": {
-      "label": "Версия протокола",
+      "label": {
+        "ru": "Версия протокола",
+        "en": "Protocol version"
+      },
       "kind": "technical",
       "confidence": "documented"
     },
     "gtm": {
-      "label": "Версия контейнера Google Tag Manager",
+      "label": {
+        "ru": "Версия контейнера Google Tag Manager",
+        "en": "Google Tag Manager container version"
+      },
       "kind": "technical",
       "confidence": "observed"
     },
     "_p": {
-      "label": "Случайное число этой загрузки",
+      "label": {
+        "ru": "Случайное число этой загрузки",
+        "en": "Random number for this load"
+      },
       "kind": "nonce",
       "confidence": "observed"
     },
     "_s": {
-      "label": "Номер обращения в сессии",
+      "label": {
+        "ru": "Номер обращения в сессии",
+        "en": "Hit number within the session"
+      },
       "kind": "technical",
       "confidence": "observed"
     },
     "seg": {
-      "label": "Была ли сессия вовлечённой",
+      "label": {
+        "ru": "Была ли сессия вовлечённой",
+        "en": "Whether the session was engaged"
+      },
       "kind": "technical",
       "confidence": "observed"
     },
     "_ss": {
-      "label": "Признак начала сессии",
+      "label": {
+        "ru": "Признак начала сессии",
+        "en": "Session start flag"
+      },
       "kind": "technical",
       "confidence": "observed"
     },
     "_fv": {
-      "label": "Признак первого визита",
+      "label": {
+        "ru": "Признак первого визита",
+        "en": "First visit flag"
+      },
       "kind": "technical",
       "confidence": "observed"
     },
     "_nsi": {
-      "label": "Признак новой сессии",
+      "label": {
+        "ru": "Признак новой сессии",
+        "en": "New session flag"
+      },
       "kind": "technical",
       "confidence": "observed"
     },
     "_dbg": {
-      "label": "Режим отладки",
+      "label": {
+        "ru": "Режим отладки",
+        "en": "Debug mode"
+      },
       "kind": "technical",
       "confidence": "observed"
     },
     "are": {
-      "label": "Признак расширенных измерений",
+      "label": {
+        "ru": "Признак расширенных измерений",
+        "en": "Enhanced measurement flag"
+      },
       "kind": "technical",
       "confidence": "observed"
     },
     "frm": {
-      "label": "Обращение из фрейма",
+      "label": {
+        "ru": "Обращение из фрейма",
+        "en": "Hit from inside a frame"
+      },
       "kind": "technical",
       "confidence": "observed"
     },
     "pscdl": {
-      "label": "Поддержка защищённых куки",
+      "label": {
+        "ru": "Поддержка защищённых куки",
+        "en": "Secure cookie support"
+      },
       "kind": "technical",
       "confidence": "observed"
     },
     "tfd": {
-      "label": "Миллисекунд с загрузки страницы",
+      "label": {
+        "ru": "Миллисекунд с загрузки страницы",
+        "en": "Milliseconds since the page loaded"
+      },
       "kind": "timing",
       "confidence": "observed"
     },
     "uaa": {
-      "label": "Архитектура процессора",
+      "label": {
+        "ru": "Архитектура процессора",
+        "en": "CPU architecture"
+      },
       "kind": "device-id",
       "confidence": "observed",
-      "note": "Высокоэнтропийная подсказка User-Agent"
+      "note": {
+        "ru": "Высокоэнтропийная подсказка User-Agent",
+        "en": "High-entropy User-Agent hint"
+      }
     },
     "uab": {
-      "label": "Разрядность системы",
+      "label": {
+        "ru": "Разрядность системы",
+        "en": "System bitness"
+      },
       "kind": "device-id",
       "confidence": "observed",
-      "note": "Высокоэнтропийная подсказка User-Agent"
+      "note": {
+        "ru": "Высокоэнтропийная подсказка User-Agent",
+        "en": "High-entropy User-Agent hint"
+      }
     },
     "uap": {
-      "label": "Операционная система",
+      "label": {
+        "ru": "Операционная система",
+        "en": "Operating system"
+      },
       "kind": "device-id",
       "confidence": "observed",
-      "note": "Высокоэнтропийная подсказка User-Agent"
+      "note": {
+        "ru": "Высокоэнтропийная подсказка User-Agent",
+        "en": "High-entropy User-Agent hint"
+      }
     },
     "uapv": {
-      "label": "Версия операционной системы",
+      "label": {
+        "ru": "Версия операционной системы",
+        "en": "Operating system version"
+      },
       "kind": "device-id",
       "confidence": "observed",
-      "note": "Высокоэнтропийная подсказка User-Agent: сужает круг машин сильнее всего"
+      "note": {
+        "ru": "Высокоэнтропийная подсказка User-Agent: сужает круг машин сильнее всего",
+        "en": "High-entropy User-Agent hint: narrows the set of machines more than anything else"
+      }
     },
     "uam": {
-      "label": "Модель устройства",
+      "label": {
+        "ru": "Модель устройства",
+        "en": "Device model"
+      },
       "kind": "device-id",
       "confidence": "observed",
-      "note": "Высокоэнтропийная подсказка User-Agent"
+      "note": {
+        "ru": "Высокоэнтропийная подсказка User-Agent",
+        "en": "High-entropy User-Agent hint"
+      }
     },
     "uamb": {
-      "label": "Мобильное ли устройство",
+      "label": {
+        "ru": "Мобильное ли устройство",
+        "en": "Whether the device is mobile"
+      },
       "kind": "device-id",
       "confidence": "observed",
-      "note": "Подсказка User-Agent"
+      "note": {
+        "ru": "Подсказка User-Agent",
+        "en": "User-Agent hint"
+      }
     },
     "uafvl": {
-      "label": "Полный список версий браузера",
+      "label": {
+        "ru": "Полный список версий браузера",
+        "en": "Full list of browser versions"
+      },
       "kind": "device-id",
       "confidence": "observed",
-      "note": "Высокоэнтропийная подсказка User-Agent: точные версии всех компонентов"
+      "note": {
+        "ru": "Высокоэнтропийная подсказка User-Agent: точные версии всех компонентов",
+        "en": "High-entropy User-Agent hint: exact versions of every component"
+      }
     },
     "uaw": {
-      "label": "Режим совместимости WOW64",
+      "label": {
+        "ru": "Режим совместимости WOW64",
+        "en": "WOW64 compatibility mode"
+      },
       "kind": "device-id",
       "confidence": "observed",
-      "note": "Подсказка User-Agent"
+      "note": {
+        "ru": "Подсказка User-Agent",
+        "en": "User-Agent hint"
+      }
     },
     "gcd": {
-      "label": "Состояние согласия на сбор данных",
+      "label": {
+        "ru": "Состояние согласия на сбор данных",
+        "en": "Consent state for data collection"
+      },
       "kind": "technical",
       "confidence": "observed",
-      "note": "Что именно вы разрешили или запретили в баннере согласия"
+      "note": {
+        "ru": "Что именно вы разрешили или запретили в баннере согласия",
+        "en": "Exactly what you allowed or refused in the consent banner"
+      }
     },
     "npa": {
-      "label": "Отказ от персонализированной рекламы",
+      "label": {
+        "ru": "Отказ от персонализированной рекламы",
+        "en": "Opt-out of personalised advertising"
+      },
       "kind": "technical",
       "confidence": "observed"
     },
     "dma": {
-      "label": "Применяется ли европейский Digital Markets Act",
+      "label": {
+        "ru": "Применяется ли европейский Digital Markets Act",
+        "en": "Whether the European Digital Markets Act applies"
+      },
       "kind": "technical",
       "confidence": "observed"
     },
     "dma_cps": {
-      "label": "Настройки согласия по Digital Markets Act",
+      "label": {
+        "ru": "Настройки согласия по Digital Markets Act",
+        "en": "Digital Markets Act consent settings"
+      },
       "kind": "technical",
       "confidence": "observed"
     },
     "tag_exp": {
-      "label": "Идентификаторы экспериментов Google Tag",
+      "label": {
+        "ru": "Идентификаторы экспериментов Google Tag",
+        "en": "Google Tag experiment identifiers"
+      },
       "kind": "technical",
       "confidence": "observed"
     }
@@ -227,30 +383,48 @@
   "patterns": [
     {
       "test": "^ep\\.",
-      "label": "Параметр события",
+      "label": {
+        "ru": "Параметр события",
+        "en": "Event parameter"
+      },
       "kind": "event-param",
       "confidence": "documented"
     },
     {
       "test": "^epn\\.",
-      "label": "Числовой параметр события",
+      "label": {
+        "ru": "Числовой параметр события",
+        "en": "Numeric event parameter"
+      },
       "kind": "event-param",
       "confidence": "documented"
     },
     {
       "test": "^up\\.",
-      "label": "Свойство пользователя",
+      "label": {
+        "ru": "Свойство пользователя",
+        "en": "User property"
+      },
       "kind": "user-property",
       "confidence": "documented",
-      "note": "Сайт сам приписал вам это свойство и хранит его между визитами"
+      "note": {
+        "ru": "Сайт сам приписал вам это свойство и хранит его между визитами",
+        "en": "The site assigned this property to you itself and keeps it between visits"
+      }
     },
     {
       "test": "^upn\\.",
-      "label": "Числовое свойство пользователя",
+      "label": {
+        "ru": "Числовое свойство пользователя",
+        "en": "Numeric user property"
+      },
       "kind": "user-property",
       "confidence": "documented"
     }
   ],
   "unknown": "preserve",
-  "note": "Google не публикует список параметров /g/collect. Поля с confidence \"documented\" известны из публичной документации gtag и наследия Universal Analytics; остальные получены наблюдением. Неизвестные поля показываются неизвестными — см. правило в 05-parsers.md."
+  "note": {
+    "ru": "Google не публикует список параметров /g/collect. Поля с confidence \"documented\" известны из публичной документации gtag и наследия Universal Analytics; остальные получены наблюдением. Неизвестные поля показываются неизвестными — см. правило в 05-parsers.md.",
+    "en": "Google does not publish the list of /g/collect parameters. Fields marked confidence \"documented\" are known from the public gtag documentation and from Universal Analytics; the rest come from observation. Unknown fields are shown as unknown — see the rule in docs/05-parsers.md."
+  }
 }

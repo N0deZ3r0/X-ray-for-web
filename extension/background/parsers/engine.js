@@ -17,26 +17,26 @@ const МАКС_ШАБЛОН = 200; // длина регулярного выра
 
 export function проверить(d) {
   const беды = [];
-  if (!d || typeof d !== 'object') return ['декларация не объект'];
-  if (!d.id) беды.push('нет id');
-  if (!d.version) беды.push('нет version');
+  if (!d || typeof d !== 'object') return ['not an object'];
+  if (!d.id) беды.push('missing id');
+  if (!d.version) беды.push('missing version');
   if (!d.match || !Array.isArray(d.match.host) || !d.match.host.length) {
-    беды.push('нет match.host');
+    беды.push('missing match.host');
   }
   if (d.unknown !== 'preserve') {
-    беды.push('unknown обязано быть "preserve" — иначе разборщик сможет молча выкидывать поля');
+    беды.push('unknown must be "preserve" — otherwise a parser could silently drop fields');
   }
-  if (d.fields && typeof d.fields !== 'object') беды.push('fields не объект');
+  if (d.fields && typeof d.fields !== 'object') беды.push('fields is not an object');
   for (const p of d.patterns || []) {
     if (typeof p.test !== 'string' || p.test.length > МАКС_ШАБЛОН) {
-      беды.push('шаблон не строка или длиннее ' + МАКС_ШАБЛОН);
+      беды.push('pattern is not a string or longer than ' + МАКС_ШАБЛОН);
     }
   }
   for (const имя of Object.keys(d.fields || {})) {
     const f = d.fields[имя];
-    if (!f.label) беды.push('поле ' + имя + ' без label');
+    if (!f.label) беды.push('field ' + имя + ' has no label');
     if (f.confidence === 'guess') {
-      беды.push('поле ' + имя + ': confidence "guess" запрещено — либо знаем, либо не опознано');
+      беды.push('field ' + имя + ': confidence "guess" is forbidden — either it is known or it is not identified');
     }
   }
   return беды;
@@ -132,7 +132,7 @@ function парыЧерезДвоеточие(текст) {
   for (let i = 0; i + 1 < части.length; i += 2) {
     const ключ = части[i];
     if (!/^[a-zA-Z0-9_-]{1,12}$/.test(ключ)) {
-      пары.push(['browser-info:остаток', части.slice(i).join(':')]);
+      пары.push(['browser-info:rest', части.slice(i).join(':')]);
       return пары;
     }
     пары.push([ключ, части[i + 1]]);
@@ -168,7 +168,7 @@ export function разобрать(d, url, bodyText) {
       const r = разобратьПары(d, пары);
       известных += r.известных;
       неопознанных += r.неопознанных;
-      группы.push({ title: 'Из адреса', fields: r.поля });
+      группы.push({ titleKey: 'group_path', fields: r.поля });
       continue;
     }
 
@@ -183,7 +183,7 @@ export function разобрать(d, url, bodyText) {
       const r = разобратьПары(d, params);
       известных += r.известных;
       неопознанных += r.неопознанных;
-      группы.push({ title: 'Параметры адреса', fields: r.поля });
+      группы.push({ titleKey: 'group_query', fields: r.поля });
 
       // Вложенная упаковка: один параметр содержит десятки полей внутри себя.
       for (const вложение of d.nested || []) {
@@ -193,6 +193,8 @@ export function разобрать(d, url, bodyText) {
         const rv = разобратьПары(d, парыЧерезДвоеточие(значение));
         известных += rv.известных;
         неопознанных += rv.неопознанных;
+        // Заголовок вложения задаёт декларация — это данные, и они двуязычны.
+        // Если его нет, показываем имя параметра как есть: выдумывать нечего.
         группы.push({ title: вложение.title || вложение.param, fields: rv.поля });
       }
       continue;
@@ -205,10 +207,11 @@ export function разобрать(d, url, bodyText) {
           const r = разобратьПары(d, [...new URLSearchParams(строка).entries()]);
           известных += r.известных;
           неопознанных += r.неопознанных;
-          группы.push({
-            title: строки.length > 1 ? 'Событие ' + (i + 1) + ' из ' + строки.length : 'Тело запроса',
-            fields: r.поля,
-          });
+          группы.push(
+            строки.length > 1
+              ? { titleKey: 'group_body_event', titleArgs: [i + 1, строки.length], fields: r.поля }
+              : { titleKey: 'group_body', fields: r.поля }
+          );
         });
         continue;
       }
@@ -216,7 +219,7 @@ export function разобрать(d, url, bodyText) {
         const r = разобратьПары(d, [...new URLSearchParams(bodyText).entries()]);
         известных += r.известных;
         неопознанных += r.неопознанных;
-        группы.push({ title: 'Тело запроса', fields: r.поля });
+        группы.push({ titleKey: 'group_body', fields: r.поля });
         continue;
       }
     }
@@ -238,7 +241,36 @@ export function разобрать(d, url, bodyText) {
 
 // ── Реестр ──────────────────────────────────────────────────────────────────
 
-export function создатьРеестр(декларации) {
+// Наследование деклараций.
+//
+// Декларации-двойники для стенда отличались от настоящих только полями id,
+// title и match — остальное было побайтовой копией. Копия из ста строк, которую
+// надо править синхронно, это не удобство, а заведённая на будущее ошибка:
+// достаточно один раз поправить ga4.json и забыть про ga4-bench.json, чтобы
+// стенд начал проверять не то, что работает на живом сайте.
+//
+// Поэтому наследник объявляет "extends": "<id родителя>" и только то, чем он
+// отличается. Слияние поверхностное и намеренно: подмешивать отдельные поля
+// внутрь fields значило бы разрешить наследнику незаметно переопределить
+// назначение одного параметра, а декларация должна читаться целиком.
+function развернутьНаследование(декларации) {
+  const поId = new Map();
+  for (const d of декларации) if (d && d.id) поId.set(d.id, d);
+
+  return декларации.map((d) => {
+    if (!d || !d.extends) return d;
+    const родитель = поId.get(d.extends);
+    // Родителя нет — наследник остаётся как есть и почти наверняка не пройдёт
+    // проверку. Это правильнее, чем молча выкинуть его из реестра.
+    if (!родитель || родитель === d) return d;
+    const слитое = Object.assign({}, родитель, d);
+    delete слитое.extends;
+    return слитое;
+  });
+}
+
+export function создатьРеестр(входные) {
+  const декларации = развернутьНаследование(входные);
   const годные = [];
   const отвергнутые = [];
   for (const d of декларации) {

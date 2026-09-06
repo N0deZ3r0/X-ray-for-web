@@ -7,80 +7,70 @@
 </head>
 <body>
 
+<!--
+  Текст в разметке не пишется. Каждый узел с data-i18n получает строку из
+  _locales по коду языка браузера; data-i18n-html — там, где внутри есть
+  разметка. Пустые узлы до подстановки видны только доли секунды, зато нет
+  второго места, где текст живёт и может разойтись с переводом.
+-->
+
 <header>
-  <h1>Рентген</h1>
+  <h1>X-ray</h1>
   <div id="origin" class="origin">—</div>
 </header>
 
 <div class="controls">
-  <button id="start" class="primary">Записать этот сайт</button>
-  <button id="stop" hidden>Остановить</button>
-  <button id="clear">Очистить</button>
-  <button id="export-report">Сохранить отчёт</button>
-  <button id="export-json">Сохранить JSON</button>
+  <button id="start" class="primary" data-i18n="btn_record"></button>
+  <button id="stop" hidden data-i18n="btn_stop"></button>
+  <button id="clear" data-i18n="btn_clear"></button>
+  <button id="export-report" data-i18n="btn_export_report"></button>
+  <button id="export-json" data-i18n="btn_export_json"></button>
   <label class="check">
     <input type="checkbox" id="third-party">
-    включая сторонние фреймы
+    <span data-i18n="check_third_party"></span>
   </label>
   <label class="check danger">
     <input type="checkbox" id="raw-export">
-    экспорт без редакции
+    <span data-i18n="check_raw_export"></span>
   </label>
-  <p class="hint" id="hint">
-    Запись начинается с перезагрузки вкладки: обёртки должны стоять
-    до первого скрипта страницы.
-  </p>
+  <p class="hint" id="hint" data-i18n="hint_reload"></p>
 </div>
 
 <section class="scope">
-  <b>Что здесь наблюдается.</b> Поверхности отпечатка и исходящее — из двух
-  независимых источников: обёртки внутри страницы и сеть. Их несовпадение и
-  есть детектор обхода.
+  <b data-i18n="scope_title"></b>
+  <span data-i18n="scope_text"></span>
   <br>
-  Разбор формата подключён для <b>GA4</b>, <b>Meta Pixel</b>, <b>Яндекс.Метрики</b>
-  и <b>Вебвизора</b>. Для остальных адресов тело показано как есть с подписью
-  «формат не опознан» — это не то же самое, что «полей нет».
-  Отпечаток шрифтов через <code>offsetWidth</code> не покрыт намеренно.
+  <span data-i18n="scope_parsers"></span>
 </section>
 
-<h2 class="journal-h">Что о вас узнали</h2>
+<h2 class="journal-h" data-i18n="h_facts"></h2>
 <section id="facts" class="facts"></section>
 
 <section id="health" class="health"></section>
 
-<h2 class="journal-h">Что ушло наружу</h2>
+<h2 class="journal-h" data-i18n="h_egress"></h2>
 <main id="egress"></main>
 
-<h2 class="journal-h">Что сайт прочитал</h2>
+<h2 class="journal-h" data-i18n="h_log"></h2>
 <div id="filters" class="filters"></div>
 <main id="log"></main>
 
 <footer>
   <div class="limits">
-    <b>Пределы этой сборки</b>
+    <b data-i18n="limits_title"></b>
     <ul>
-      <li>Наблюдение изнутри страницы помечено <code>internal</code>: канал виден
-          странице. До <code>confirmed</code> его поднимает только совпадение
-          с сетью, которую страница подделать не может.</li>
-      <li>Страница видит обёртки и канал доставки.</li>
-      <li><b>Воркеры не наблюдаются.</b> Отпечаток, снятый внутри воркера,
-          прибору не виден; заметен только маячок оттуда, и то по сети.
-          Вызов из свежесозданного фрейма, наоборот, виден: прибор встаёт
-          и туда тоже.</li>
-      <li><b>Другие расширения в вашем браузере</b> подменяют те же API.
-          Их вызовы помечены «не сайт». Отличить, действует расширение само
-          или по просьбе страницы, прибор не может.</li>
-      <li><b>WebSocket сетью не проверяется:</b> разрешения не покрывают схему
-          <code>ws</code>. Это не то же самое, что «запрос не ушёл».</li>
-      <li>Разбор формата есть для GA4, Meta Pixel, Метрики и Вебвизора.
-          Для остальных адресов подпись «формат не опознан» — это не
-          «полей нет».</li>
-      <li>Не удалось разобрать стек — пишем «источник не определён»,
-          а не подставляем страницу.</li>
+      <li data-i18n-html="limit_internal"></li>
+      <li data-i18n-html="limit_wrappers_visible"></li>
+      <li data-i18n-html="limit_workers"></li>
+      <li data-i18n-html="limit_other_extensions"></li>
+      <li data-i18n-html="limit_websocket"></li>
+      <li data-i18n-html="limit_parsers"></li>
+      <li data-i18n-html="limit_unknown_source"></li>
     </ul>
   </div>
 </footer>
 
+<script src="i18n.js"></script>
 <script src="panel.js"></script>
 </body>
 </html>

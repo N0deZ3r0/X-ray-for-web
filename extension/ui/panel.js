@@ -7,18 +7,30 @@
 (() => {
   'use strict';
 
+  // Язык берётся из браузера: ui/i18n.js подключён в panel.html до этого файла.
+  const { t, n: скл, текст: изДекларации } = self.РЕНТГЕН_I18N;
+
   const $ = (id) => document.getElementById(id);
+
+  // Разметка приходит без текста: подставляем его по языку браузера. Делается
+  // один раз при загрузке — язык внутри сеанса не меняется.
+  function подставитьВРазметку() {
+    for (const el of document.querySelectorAll('[data-i18n]')) {
+      el.textContent = t(el.getAttribute('data-i18n'));
+    }
+    // Отдельный атрибут для строк с разметкой внутри: <b>, <code>. Источник —
+    // собственный файл переводов, чужой текст сюда не попадает.
+    for (const el of document.querySelectorAll('[data-i18n-html]')) {
+      el.innerHTML = t(el.getAttribute('data-i18n-html'));
+    }
+    document.documentElement.lang = self.РЕНТГЕН_I18N.язык;
+  }
+  подставитьВРазметку();
 
   // Панель читают люди. «2 записей» подрывает доверие к тексту раньше, чем
   // содержание успевает сработать, а весь этап Э4 именно про это.
-  function склонение(n, одна, две, много) {
-    const сотня = n % 100;
-    if (сотня >= 11 && сотня <= 14) return n + ' ' + много;
-    const единица = n % 10;
-    if (единица === 1) return n + ' ' + одна;
-    if (единица >= 2 && единица <= 4) return n + ' ' + две;
-    return n + ' ' + много;
-  }
+  // Правила множественного числа переехали в ui/i18n.js: они зависят от языка,
+  // а не от этого файла. Здесь остался только вызов скл(число, ключ).
 
   let currentTab = null; // кэшируется, чтобы жест пользователя не тратился на await
   let port = null;
@@ -86,7 +98,7 @@
 
     const box = $('origin');
     if (!currentTab || !/^https?:/.test(currentTab.url || '')) {
-      box.textContent = 'Вкладка недоступна для наблюдения';
+      box.textContent = t('tab_not_observable');
       $('start').disabled = true;
       return;
     }
@@ -100,8 +112,43 @@
     return String(v == null ? '' : v);
   }
 
+  // Инструмент работает в мире страницы, где chrome.i18n нет, поэтому подробности
+  // вызова он записывает кодами: «chars:4820», «rect:200x100@0,0», «yes». Слова
+  // подставляются здесь. Незнакомый код показывается как есть — придумывать ему
+  // расшифровку нельзя, а потерять её ещё хуже.
+  function подробность(код) {
+    const v = String(код == null ? '' : код);
+    let m;
+    if ((m = /^chars:(d+)$/.exec(v))) return t('det_chars', m[1]);
+    if ((m = /^n:(d+)$/.exec(v))) return t('det_items', m[1]);
+    if ((m = /^rect:(d+)x(d+)@(-?d+),(-?d+)$/.exec(v))) return t('det_rect', m[1], m[2], m[3], m[4]);
+    if ((m = /^audio:([d.]+),([d.]+)$/.exec(v))) return t('det_audio', m[1], m[2]);
+    if ((m = /^cookies:(d+)$/.exec(v))) return t('det_cookies', m[1]);
+    if ((m = /^html:(d+)$/.exec(v))) return t('det_html', m[1]);
+    if ((m = /^surfaces:(d+)(?: failed:(d+):(.*))?$/.exec(v))) {
+      const голова = t('det_surfaces', m[1]);
+      return m[2] ? голова + '; ' + t('det_failed', m[2], m[3]) : голова;
+    }
+    if (v === 'yes') return t('det_yes');
+    if (v === 'no') return t('det_no');
+    if (v === 'self:known') return t('det_self_known');
+    if (v === 'self:unknown') return t('det_self_unknown');
+    // Куки: «имя | days:730» или «имя | until:...»; ключ localStorage: «имя | chars:12»
+    if ((m = /^(.*) | days:(d+)$/.exec(v))) return m[1] + ', ' + t('det_days', m[2]);
+    if ((m = /^(.*) | until:(.*)$/.exec(v))) return m[1] + ', ' + t('det_until', m[2]);
+    if ((m = /^(.*) | chars:(d+)$/.exec(v))) return m[1] + ' (' + t('det_chars', m[2]) + ')';
+    return v;
+  }
+
+  // Фрейм тоже хранится кодом: 'main', 'about', 'frame'.
+  function имяФрейма(первое, frameId) {
+    if (первое.frameKind === 'main') return t('frame_main');
+    if (первое.frameKind === 'about') return t('frame_about', первое.frameUrl || '');
+    return t('frame_other') + (frameId ? ' #' + frameId : '');
+  }
+
   function attributionLine(a) {
-    if (!a) return { text: 'источник не определён', cls: 'unknown' };
+    if (!a) return { text: t('attr_unknown_source'), cls: 'unknown' };
 
     // Непосредственный вызывающий — ДРУГОЕ расширение в этом браузере, а не
     // сайт. Найдено на живой машине: расширение подменило конструктор Worker и
@@ -109,16 +156,16 @@
     if (a.viaExtension) {
       if (!a.scriptUrl) {
         return {
-          text: 'другое расширение в вашем браузере: ' + a.viaExtension,
+          text: t('attr_via_extension', a.viaExtension),
           cls: 'ext',
-          badge: 'не сайт',
+          badge: t('attr_not_site'),
         };
       }
       const s = a.scriptUrl.length > 50 ? '…' + a.scriptUrl.slice(-47) : a.scriptUrl;
       return {
-        text: 'другое расширение (' + a.viaExtension + '), ниже по стеку ' + s + ':' + a.line,
+        text: t('attr_via_extension_deeper', a.viaExtension, s + ':' + a.line),
         cls: 'ext',
-        badge: 'не сайт',
+        badge: t('attr_not_site'),
       };
     }
 
@@ -126,39 +173,41 @@
     return {
       text: short + ':' + a.line + ':' + a.column,
       cls: a.thirdParty ? 'third' : a.inline ? 'inline' : 'first',
-      badge: a.thirdParty ? 'сторонний' : a.inline ? 'встроенный' : 'первая сторона',
+      badge: a.thirdParty ? t('attr_third') : a.inline ? t('attr_inline') : t('attr_first'),
     };
   }
 
   function renderHealth(session, recording) {
     const el = $('health');
     if (!session) {
-      el.textContent = recording ? 'Запись включена, наблюдений пока нет.' : '';
+      el.textContent = recording ? t('health_empty') : '';
       return;
     }
     const h = session.health;
 
     const rows = [
-      ['Записей', h.eventsRecorded],
-      ['Вызовов перехвачено', h.callsSeen != null ? h.callsSeen : '—'],
-      ['Фреймов с прибором', h.instrumentedFrames],
-      ['Поверхностей обёрнуто', h.surfacesInstalled != null ? h.surfacesInstalled : '—'],
-      ['Потеряно записей', h.eventsDropped],
-      ['Потерь на мосту', h.bridgeGaps],
-      ['Подмен документа', h.documentReplacements || 0],
-      ['Перезапусков worker', h.swRestarts],
-      ['Со снятием стека', h.coldCalls != null ? h.coldCalls : '—'],
-      ['На них ушло, мс', h.coldMs != null ? h.coldMs : '—'],
-      ['Счётчиком, без стека', h.hotCalls != null ? h.hotCalls : '—'],
-      ['Вызовов в секунду', h.callsPerSecond != null ? h.callsPerSecond : '—'],
+      [null, t('health_records'), h.eventsRecorded],
+      [null, t('health_calls'), h.callsSeen != null ? h.callsSeen : '—'],
+      [null, t('health_frames'), h.instrumentedFrames],
+      [null, t('health_surfaces'), h.surfacesInstalled != null ? h.surfacesInstalled : '—'],
+      ['плохо', t('health_dropped'), h.eventsDropped],
+      ['плохо', t('health_bridge_loss'), h.bridgeGaps],
+      [null, t('health_doc_replaced'), h.documentReplacements || 0],
+      [null, t('health_sw_restarts'), h.swRestarts],
+      [null, t('health_with_stack'), h.coldCalls != null ? h.coldCalls : '—'],
+      [null, t('health_stack_ms'), h.coldMs != null ? h.coldMs : '—'],
+      [null, t('health_counted'), h.hotCalls != null ? h.hotCalls : '—'],
+      [null, t('health_calls_per_sec'), h.callsPerSecond != null ? h.callsPerSecond : '—'],
     ];
 
     el.textContent = '';
     const grid = document.createElement('div');
     grid.className = 'health-grid';
-    for (const [k, v] of rows) {
+    for (const [метка, k, v] of rows) {
       const cell = document.createElement('div');
-      const bad = (k === 'Потеряно записей' || k === 'Потерь на мосту') && Number(v) > 0;
+      // Признак «плохо» приходит рядом со строкой, а не выводится из её текста:
+      // сравнивать переведённые слова значило бы сломать подсветку на другом языке.
+      const bad = метка === 'плохо' && Number(v) > 0;
       cell.className = 'health-cell' + (bad ? ' bad' : '');
       cell.innerHTML = '<span class="hk"></span><span class="hv"></span>';
       cell.querySelector('.hk').textContent = k;
@@ -177,13 +226,9 @@
       const v = document.createElement('div');
       v.className = 'verdict';
       v.innerHTML =
-        'Сверка источников: <b>' + c + '</b> подтверждено обоими, ' +
-        '<b class="' + (no ? 'bad' : '') + '">' + no + '</b> прошло мимо инструментации, ' +
-        '<b>' + ho + '</b> не дошло до сети, ' +
-        '<b>' + (h.noNetworkSource || 0) + '</b> нечем проверить (WebSocket), ' +
-        '<b>' + un + '</b> вне наблюдения — стили, скрипты, шрифты, картинки. ' +
-        'Они посчитаны, но не показаны: обвинять их не в чем, а списком они ' +
-        'утопили бы маячки.';
+        t('health_reconcile', c, no, ho, h.noNetworkSource || 0, un);
+      const мимо = v.querySelector('.mimo');
+      if (мимо && no) мимо.className = 'mimo bad';
       el.appendChild(v);
     }
 
@@ -194,8 +239,7 @@
       const n = document.createElement('div');
       n.className = 'note';
       n.textContent =
-        'Время показано только для вызовов со снятием стека — их можно замерить. ' +
-        'Вызовы-счётчики стоят меньше, чем сам замер, поэтому их время не показано.';
+        t('health_time_note');
       el.appendChild(n);
     }
 
@@ -205,22 +249,20 @@
       const w = document.createElement('div');
       w.className = 'warn';
       w.textContent =
-        'Прибор снизил детализацию, чтобы не мешать странице. Дальнейшие вызовы идут счётчиком без привязки к скрипту.';
+        t('health_killswitch');
       el.appendChild(w);
     }
     if (h.coldBudgetExhausted) {
       const w = document.createElement('div');
       w.className = 'warn';
       w.textContent =
-        'Бюджет подробностей исчерпан. Дальнейшие вызовы считаются, но не ' +
-        'привязываются к скрипту: снятие стека стоит около 25 мкс, и без ' +
-        'потолка прибор заметно замедлил бы страницу.';
+        t('health_budget');
       el.appendChild(w);
     }
     if (h.degradedSurfaces && h.degradedSurfaces.length) {
       const w = document.createElement('div');
       w.className = 'note';
-      w.textContent = 'Схлопнуты до счётчика: ' + h.degradedSurfaces.join(', ');
+      w.textContent = t('health_collapsed', h.degradedSurfaces.join(', '));
       el.appendChild(w);
     }
     // Поверхность, которую не удалось обернуть, — это слепое пятно. Молчать
@@ -229,14 +271,13 @@
       const w = document.createElement('div');
       w.className = 'warn';
       w.textContent =
-        'Не удалось обернуть: ' + h.surfacesFailed.join(', ') +
-        '. По этим поверхностям прибор слеп.';
+        t('health_wrap_failed', h.surfacesFailed.join(', '));
       el.appendChild(w);
     }
     if (session.truncated) {
       const w = document.createElement('div');
       w.className = 'warn';
-      w.textContent = 'Журнал обрезан по потолку размера. Часть наблюдений не сохранена.';
+      w.textContent = t('health_truncated');
       el.appendChild(w);
     }
   }
@@ -246,6 +287,14 @@
   // Счётчик неопознанного показывается всегда и рядом с датой схемы. Так
   // интерфейс сам сообщает о своём устаревании: когда GA4 добавит поле,
   // человек увидит «не опознано 4» вместо тихой лжи.
+  // Заголовок группы приходит одним из двух видов. Код — от движка: он не
+  // знает языков и не должен. Объект {ru,en} — из декларации: она данные, и
+  // текст в ней двуязычен прямо в JSON.
+  function заголовокГруппы(g) {
+    if (g.titleKey) return t(g.titleKey, ...(g.titleArgs || []));
+    return изДекларации(g.title);
+  }
+
   function разборВРазметку(p) {
     const box = document.createElement('div');
     box.className = 'parsed';
@@ -253,12 +302,12 @@
     const head = document.createElement('div');
     head.className = 'parsed-head';
     const итог =
-      'разобрано ' + p.knownCount + ', не опознано ' + p.unknownCount;
+      t('parser_counts', p.knownCount, p.unknownCount);
     head.innerHTML =
       '<span class="parser-name"></span><span class="parser-ver"></span>' +
       '<span class="parser-count' + (p.unknownCount ? ' warn-count' : '') + '"></span>';
-    head.querySelector('.parser-name').textContent = p.parserTitle;
-    head.querySelector('.parser-ver').textContent = 'схема от ' + p.parserVersion;
+    head.querySelector('.parser-name').textContent = изДекларации(p.parserTitle);
+    head.querySelector('.parser-ver').textContent = t('parser_schema', p.parserVersion);
     head.querySelector('.parser-count').textContent = итог;
     box.appendChild(head);
 
@@ -266,7 +315,7 @@
       if (p.groups.length > 1) {
         const gt = document.createElement('div');
         gt.className = 'group-title';
-        gt.textContent = g.title;
+        gt.textContent = заголовокГруппы(g);
         box.appendChild(gt);
       }
       for (const f of g.fields) {
@@ -275,7 +324,7 @@
 
         const label = document.createElement('span');
         label.className = 'f-label';
-        label.textContent = f.label || 'не опознано';
+        label.textContent = изДекларации(f.label) || t('not_identified');
 
         const name = document.createElement('span');
         name.className = 'f-name';
@@ -290,10 +339,10 @@
         fr.appendChild(value);
         box.appendChild(fr);
 
-        if (f.note) {
+        if (изДекларации(f.note)) {
           const n = document.createElement('div');
           n.className = 'f-note';
-          n.textContent = f.note;
+          n.textContent = изДекларации(f.note);
           box.appendChild(n);
         }
       }
@@ -311,7 +360,7 @@
     if (!свод || !свод.facts.length) {
       const p = document.createElement('p');
       p.className = 'empty';
-      p.textContent = session ? 'Пока ничего не собрано.' : 'Записи нет.';
+      p.textContent = session ? t('facts_empty_recording') : t('no_session');
       box.appendChild(p);
       return;
     }
@@ -342,9 +391,7 @@
       const ev = document.createElement('div');
       ev.className = 'fact-ev';
       ev.textContent =
-        'основание: ' +
-        склонение(f.evidence.length, 'запись', 'записи', 'записей') +
-        ' в журнале';
+        t('fact_basis') + скл(f.evidence.length, 'plural_record_lower') + t('fact_basis_suffix');
       card.appendChild(ev);
 
       box.appendChild(card);
@@ -355,15 +402,9 @@
     const cov = document.createElement('div');
     cov.className = 'coverage';
     cov.innerHTML =
-      'Снято поверхностей отпечатка: <b></b> из <b></b>.' +
+      t('coverage', c.снято, c.наблюдается == null ? '?' : c.наблюдается) +
       '<span class="why"></span>';
-    const b = cov.querySelectorAll('b');
-    b[0].textContent = c.снято;
-    b[1].textContent = c.наблюдается == null ? '?' : c.наблюдается;
-    cov.querySelector('.why').textContent =
-      'Битов энтропии здесь нет намеренно: их не существует без распределения ' +
-      'по всем пользователям, а прибор стоит на одной машине. Любое такое ' +
-      'число было бы доверием к чужому датасету, а не измерением.';
+    cov.querySelector('.why').textContent = t('coverage_why');
     box.appendChild(cov);
   }
 
@@ -375,7 +416,7 @@
     if (!list.length) {
       const p = document.createElement('p');
       p.className = 'empty';
-      p.textContent = session ? 'Исходящего не было.' : 'Записи нет.';
+      p.textContent = session ? t('egress_empty') : t('no_session');
       box.appendChild(p);
       return;
     }
@@ -395,8 +436,7 @@
     const счёт = document.createElement('p');
     счёт.className = 'note';
     счёт.textContent =
-      склонение(list.length, 'Запись', 'Записи', 'Записей') +
-      '. Сверху обходы, затем запросы с телом, затем остальное.';
+      скл(list.length, 'plural_record_upper') + t('egress_order_note');
     box.appendChild(счёт);
 
     const frame = document.createElement('section');
@@ -418,19 +458,19 @@
       transport.textContent = e.transport || '';
 
       const m = document.createElement('span');
-      m.className = 'm m-' + (e.match || 'ожидает');
+      m.className = 'm m-' + (e.match || 'pending');
       m.textContent =
         e.match === 'network-only'
-          ? 'прошло мимо прибора'
+          ? t('verdict_network_only')
           : e.match === 'confirmed'
-            ? 'подтверждено сетью'
+            ? t('verdict_confirmed')
             : e.match === 'hook-only'
-              ? 'в сеть не ушло'
+              ? t('verdict_hook_only')
               : e.match === 'no-network-source'
-                ? 'сетью не проверяется'
+                ? t('verdict_no_network_source')
                 : e.match === 'unobserved'
-                  ? 'вне наблюдения'
-                  : 'ожидает';
+                  ? t('verdict_unobserved')
+                  : t('verdict_pending');
 
       const url = document.createElement('span');
       url.className = 'eg-url';
@@ -452,13 +492,12 @@
         const b = document.createElement('div');
         b.className = 'eg-body';
         b.textContent =
-          'формат не опознан, тело как есть: ' +
-          текст.slice(0, 400) + (текст.length > 400 ? ' …' : '');
+          t('body_unparsed', текст.slice(0, 400) + (текст.length > 400 ? ' …' : ''));
         row.appendChild(b);
       } else if (e.bodySize) {
         const b = document.createElement('div');
         b.className = 'eg-body';
-        b.textContent = 'тело: ' + e.bodySize + ' байт, ' + (e.bodyForm || '');
+        b.textContent = t('body_size', e.bodySize, e.bodyForm || '');
         row.appendChild(b);
       }
 
@@ -468,10 +507,10 @@
         meta.push(a.badge + ': ' + a.text);
       } else if (e.source === 'network') {
         // Источник не определён и выдумывать его нельзя
-        meta.push('источник не определён — наблюдение только из сети');
+        meta.push(t('source_network_only'));
       }
       if (e.cookiesSent && e.cookiesSent.length) {
-        meta.push('ушли куки: ' + e.cookiesSent.join(', '));
+        meta.push(t('cookies_sent', e.cookiesSent.join(', ')));
       }
       if (meta.length) {
         const mt = document.createElement('div');
@@ -493,17 +532,10 @@
   // он включён, над списком висит строка «показано N из M». Скрытое не должно
   // выглядеть отсутствующим — на этом держится всё остальное в этом приборе.
 
-  const ИМЕНА_ГРУПП = {
-    canvas: 'холст',
-    webgl: 'видеокарта',
-    audio: 'звук',
-    fonts: 'шрифты',
-    device: 'устройство',
-    hardware: 'железо',
-    storage: 'хранилища',
-    shadow: 'теневой DOM',
-    meta: 'служебное',
-  };
+  // Группа приходит из журнала кодом; слово подставляется здесь. Неизвестная
+  // группа показывается своим кодом — выдумывать ей имя нельзя.
+  const ГРУППЫ = ['canvas', 'webgl', 'audio', 'fonts', 'device', 'hardware', 'storage', 'shadow', 'meta'];
+  const имяГруппы = (g) => (ГРУППЫ.includes(g) ? t('sgroup_' + g) : g);
 
   let фильтрГруппы = null;
   let фильтрФрейма = null;
@@ -549,7 +581,7 @@
     }
 
     box.appendChild(
-      чип('все', surfaces.length, !фильтрГруппы && фильтрФрейма === null && !фильтрТолькоСайт, () => {
+      чип(t('filter_all'), surfaces.length, !фильтрГруппы && фильтрФрейма === null && !фильтрТолькоСайт, () => {
         фильтрГруппы = null;
         фильтрФрейма = null;
         фильтрТолькоСайт = false;
@@ -559,7 +591,7 @@
     // Порядок по весу: то, чего много, важнее для беглого взгляда.
     for (const [g, n] of [...поГруппам].sort((a, b) => b[1] - a[1])) {
       box.appendChild(
-        чип(ИМЕНА_ГРУПП[g] || g, n, фильтрГруппы === g, () => {
+        чип(имяГруппы(g), n, фильтрГруппы === g, () => {
           фильтрГруппы = фильтрГруппы === g ? null : g;
         })
       );
@@ -573,7 +605,7 @@
       box.appendChild(sep);
       for (const [f, n] of [...поФреймам].sort((a, b) => a[0] - b[0])) {
         box.appendChild(
-          чип(f === 0 ? 'главный документ' : 'фрейм #' + f, n, фильтрФрейма === f, () => {
+          чип(f === 0 ? t('frame_main') : t('frame_numbered', f), n, фильтрФрейма === f, () => {
             фильтрФрейма = фильтрФрейма === f ? null : f;
           })
         );
@@ -586,7 +618,7 @@
       sep.className = 'filters-sep';
       box.appendChild(sep);
       box.appendChild(
-        чип('без чужих расширений', чужих, фильтрТолькоСайт, () => {
+        чип(t('filter_no_ext'), чужих, фильтрТолькоСайт, () => {
           фильтрТолькоСайт = !фильтрТолькоСайт;
         })
       );
@@ -608,7 +640,7 @@
       $('filters').textContent = '';
       const p = document.createElement('p');
       p.className = 'empty';
-      p.textContent = 'Наблюдений нет.';
+      p.textContent = t('log_empty');
       log.appendChild(p);
       return;
     }
@@ -620,14 +652,13 @@
       const n = document.createElement('p');
       n.className = 'filters-note';
       n.textContent =
-        'Фильтр включён: показано ' + видимые.length + ' из ' + surfaces.length +
-        '. Остальное не исчезло — оно скрыто вами и целиком уходит в экспорт.';
+        t('filter_note', видимые.length, surfaces.length);
       $('filters').appendChild(n);
     }
     if (!видимые.length) {
       const p2 = document.createElement('p');
       p2.className = 'empty';
-      p2.textContent = 'Под фильтр не попало ничего.';
+      p2.textContent = t('filter_empty');
       log.appendChild(p2);
       return;
     }
@@ -652,7 +683,7 @@
       head.className = 'frame-head';
       const title = document.createElement('span');
       title.className = 'frame-title';
-      title.textContent = first.frameKind + (frameId ? ' #' + frameId : '');
+      title.textContent = имяФрейма(first, frameId);
       const url = document.createElement('span');
       url.className = 'frame-url';
       url.textContent = first.frameUrl || first.frameOrigin || '';
@@ -664,7 +695,7 @@
         if (e.kind === 'installed') {
           const row = document.createElement('div');
           row.className = 'row meta';
-          row.textContent = 'прибор встал на ' + e.t + ' мс — обёрнуто: ' + (e.arg || '');
+          row.textContent = t('installed_row', e.t, подробность(e.arg));
           group.appendChild(row);
           continue;
         }
@@ -683,12 +714,12 @@
           '<div class="r2"><span class="attr"></span><span class="who"></span></div>' +
           '<div class="r3"></div>';
 
-        row.querySelector('.t').textContent = (e.t / 1000).toFixed(2) + ' с';
+        row.querySelector('.t').textContent = (e.t / 1000).toFixed(2) + t('seconds_suffix');
         row.querySelector('.surface').textContent = e.surface;
         row.querySelector('.count').textContent = e.count > 1 ? '×' + e.count : '';
         const det = row.querySelector('.detail');
         if (e.detail === 'counted') {
-          det.textContent = 'счётчик';
+          det.textContent = t('detail_counted');
           det.className = 'detail counted';
         }
 
@@ -703,8 +734,8 @@
 
         const r3 = row.querySelector('.r3');
         const bits = [];
-        if (e.arg) bits.push('аргумент: ' + e.arg);
-        if (e.result) bits.push('результат: ' + e.result);
+        if (e.arg) bits.push(t('arg_prefix') + подробность(e.arg));
+        if (e.result) bits.push(t('result_prefix') + подробность(e.result));
         if (bits.length) r3.textContent = bits.join('   ·   ');
         else r3.remove();
 
@@ -770,7 +801,7 @@
   function сброситьПодтверждение() {
     if (!подтвердитьСтирание) return;
     подтвердитьСтирание = false;
-    $('start').textContent = 'Записать этот сайт';
+    $('start').textContent = t('btn_record');
     $('start').classList.remove('danger-btn');
   }
 
@@ -780,13 +811,10 @@
     const было = последнийСеанс ? последнийСеанс.events.length : 0;
     if (было && !подтвердитьСтирание) {
       подтвердитьСтирание = true;
-      $('start').textContent = 'Стереть прошлую запись и начать';
+      $('start').textContent = t('btn_record_erase');
       $('start').classList.add('danger-btn');
       $('hint').textContent =
-        'В прошлой записи ' +
-        склонение(было, 'наблюдение', 'наблюдения', 'наблюдений') +
-        '. Перезагрузка вкладки их сотрёт — сохраните отчёт, если он нужен. ' +
-        'Нажмите ещё раз, чтобы начать заново.';
+        t('hint_erase', скл(было, 'plural_observation'));
       return;
     }
 
@@ -799,14 +827,14 @@
     // permissions.request требует жеста пользователя — вызываем ДО любого await
     chrome.permissions.request({ origins: patterns }, async (granted) => {
       if (!granted) {
-        $('hint').textContent = 'Разрешение не выдано — записывать нечем.';
+        $('hint').textContent = t('hint_no_permission');
         return;
       }
       const r = await ask({
         type: 'panel:start',
         payload: { tabId: currentTab.id, origin, patterns },
       });
-      if (r && r.ok === false) $('hint').textContent = 'Не удалось начать: ' + r.error;
+      if (r && r.ok === false) $('hint').textContent = t('hint_start_failed', r.error);
       сброситьПодтверждение();
       прошлаяПодпись = null;
       setTimeout(refresh, 400);
@@ -837,18 +865,13 @@
     let редакция = true;
     if ($('raw-export').checked) {
       редакция = !confirm(
-        'Сохранить БЕЗ редакции?\n\n' +
-          'В файл попадут настоящие идентификаторы устройства и сессии, ' +
-          'идентификатор пользователя, хеши почты и телефона, адрес предыдущей ' +
-          'страницы и сырые тела запросов.\n\n' +
-          'Такой файл нельзя прикладывать к багрепортам и пересылать.\n\n' +
-          'ОК — без редакции. Отмена — с редакцией.'
+        t('confirm_raw_export')
       );
     }
 
     const r = await ask({ type: 'panel:export', tabId: currentTab.id, редакция });
     if (!r || !r.ok) {
-      $('hint').textContent = 'Экспорт не получился: ' + ((r && r.error) || 'нет ответа');
+      $('hint').textContent = t('export_failed', (r && r.error) || t('no_answer'));
       return;
     }
 
@@ -863,9 +886,8 @@
     }
 
     $('hint').textContent = r.редакция
-      ? 'Сохранено. Вырезано значений: ' + r.вырезано + '. Поля остались видны.'
-      : 'Сохранено БЕЗ редакции, файл помечен в имени. Галочка снята — ' +
-        'следующий экспорт снова с редакцией.';
+      ? t('export_saved', r.вырезано)
+      : t('export_saved_raw');
   }
 
   $('export-report').addEventListener('click', () => экспорт('отчёт'));

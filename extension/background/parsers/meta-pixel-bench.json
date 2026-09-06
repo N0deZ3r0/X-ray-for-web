@@ -1,170 +1,20 @@
 {
   "id": "meta-pixel-bench",
-  "title": "Meta Pixel (Facebook) (стенд)",
+  "extends": "meta-pixel",
+  "title": {
+    "ru": "Meta Pixel (Facebook) (стенд)",
+    "en": "Meta Pixel (Facebook) (bench)"
+  },
   "version": "2026-09",
-  "note": "Meta не публикует список параметров /tr. Поля получены наблюдением. Группа ud[...] — это Advanced Matching: данные о человеке, хешированные SHA-256 и отправляемые для сопоставления с профилем в Facebook и Instagram.",
+  "note": {
+    "ru": "Двойник для стенда: те же поля, другой адрес. Всё, кроме match, наследуется от «meta-pixel» — копия правилась бы отдельно и однажды разошлась бы.",
+    "en": "Bench twin: the same fields, a different address. Everything except match is inherited from the parent declaration — a copy would be edited separately and would drift apart one day."
+  },
   "match": {
     "host": [
       "localhost",
       "127.0.0.1"
     ],
     "path": "^/tr"
-  },
-  "extract": [
-    {
-      "from": "query"
-    },
-    {
-      "from": "body",
-      "format": "urlencoded"
-    }
-  ],
-  "fields": {
-    "id": {
-      "label": "Идентификатор пикселя",
-      "kind": "site-id",
-      "confidence": "observed",
-      "note": "Кому именно уходят данные — рекламный кабинет владельца пикселя"
-    },
-    "ev": {
-      "label": "Название события",
-      "kind": "event-name",
-      "confidence": "observed",
-      "note": "PageView — просмотр, Purchase — покупка, Lead — заявка, ViewContent — просмотр товара"
-    },
-    "dl": {
-      "label": "Адрес страницы",
-      "kind": "page-url",
-      "confidence": "observed"
-    },
-    "rl": {
-      "label": "Откуда вы пришли",
-      "kind": "referrer",
-      "confidence": "observed"
-    },
-    "ts": {
-      "label": "Время отправки",
-      "kind": "timing",
-      "confidence": "observed"
-    },
-    "sw": {
-      "label": "Ширина экрана",
-      "kind": "screen",
-      "confidence": "observed"
-    },
-    "sh": {
-      "label": "Высота экрана",
-      "kind": "screen",
-      "confidence": "observed"
-    },
-    "v": {
-      "label": "Версия библиотеки",
-      "kind": "technical",
-      "confidence": "observed"
-    },
-    "r": {
-      "label": "Ветка сборки",
-      "kind": "technical",
-      "confidence": "observed"
-    },
-    "a": {
-      "label": "Через какую интеграцию",
-      "kind": "technical",
-      "confidence": "observed"
-    },
-    "it": {
-      "label": "Когда пиксель загрузился",
-      "kind": "timing",
-      "confidence": "observed"
-    },
-    "coo": {
-      "label": "Разрешены ли собственные куки пикселя",
-      "kind": "technical",
-      "confidence": "observed"
-    },
-    "es": {
-      "label": "Источник события",
-      "kind": "technical",
-      "confidence": "observed"
-    },
-    "eid": {
-      "label": "Идентификатор события",
-      "kind": "session-id",
-      "confidence": "observed"
-    },
-    "ud[em]": {
-      "label": "Хеш вашего адреса электронной почты",
-      "kind": "email-hash",
-      "confidence": "observed",
-      "note": "SHA-256. Расшифровать нельзя, но он одинаков на всех сайтах — по нему вас узнают в профиле Facebook"
-    },
-    "ud[ph]": {
-      "label": "Хеш вашего номера телефона",
-      "kind": "phone-hash",
-      "confidence": "observed",
-      "note": "SHA-256, тот же приём сопоставления с профилем"
-    },
-    "ud[fn]": {
-      "label": "Хеш вашего имени",
-      "kind": "name-hash",
-      "confidence": "observed"
-    },
-    "ud[ln]": {
-      "label": "Хеш вашей фамилии",
-      "kind": "name-hash",
-      "confidence": "observed"
-    },
-    "ud[external_id]": {
-      "label": "Ваш идентификатор в системе сайта",
-      "kind": "user-id",
-      "confidence": "observed",
-      "note": "Связывает визит с вашей учётной записью на сайте"
-    },
-    "ud[ge]": {
-      "label": "Хеш вашего пола",
-      "kind": "personal-hash",
-      "confidence": "observed"
-    },
-    "ud[db]": {
-      "label": "Хеш вашей даты рождения",
-      "kind": "personal-hash",
-      "confidence": "observed"
-    },
-    "ud[ct]": {
-      "label": "Хеш вашего города",
-      "kind": "personal-hash",
-      "confidence": "observed"
-    },
-    "ud[st]": {
-      "label": "Хеш вашего региона",
-      "kind": "personal-hash",
-      "confidence": "observed"
-    },
-    "ud[zp]": {
-      "label": "Хеш вашего почтового индекса",
-      "kind": "personal-hash",
-      "confidence": "observed"
-    },
-    "ud[country]": {
-      "label": "Хеш вашей страны",
-      "kind": "personal-hash",
-      "confidence": "observed"
-    }
-  },
-  "patterns": [
-    {
-      "test": "^cd\\[",
-      "label": "Данные события, заданные сайтом",
-      "kind": "event-param",
-      "confidence": "observed"
-    },
-    {
-      "test": "^ud\\[",
-      "label": "Данные о вас для сопоставления с профилем",
-      "kind": "personal-hash",
-      "confidence": "observed",
-      "note": "Поле из группы Advanced Matching, точное назначение не установлено. Показано как есть и вырезается при экспорте"
-    }
-  ],
-  "unknown": "preserve"
+  }
 }

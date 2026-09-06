@@ -1,8 +1,14 @@
 {
   "id": "yandex-webvisor",
-  "title": "Яндекс.Вебвизор — запись действий",
+  "title": {
+    "ru": "Яндекс.Вебвизор — запись действий",
+    "en": "Yandex.Webvisor — session recording"
+  },
   "version": "2026-09",
-  "note": "Вебвизор пишет движения мыши, прокрутку, клики и ввод в поля. Это не разновидность аналитики, а запись сеанса, и показывается отдельной строкой.",
+  "note": {
+    "ru": "Вебвизор пишет движения мыши, прокрутку, клики и ввод в поля. Это не разновидность аналитики, а запись сеанса, и показывается отдельной строкой.",
+    "en": "Webvisor records mouse movement, scrolling, clicks and typing into fields. This is not a kind of analytics but a recording of your session, and it is shown on a line of its own."
+  },
   "match": {
     "host": [
       "mc.yandex.ru",
@@ -25,27 +31,42 @@
   ],
   "fields": {
     "counter": {
-      "label": "Номер счётчика, который ведёт запись",
+      "label": {
+        "ru": "Номер счётчика, который ведёт запись",
+        "en": "Number of the counter doing the recording"
+      },
       "kind": "site-id",
       "confidence": "observed"
     },
     "page-url": {
-      "label": "Адрес записываемой страницы",
+      "label": {
+        "ru": "Адрес записываемой страницы",
+        "en": "Address of the page being recorded"
+      },
       "kind": "page-url",
       "confidence": "observed"
     },
     "rn": {
-      "label": "Случайное число запроса",
+      "label": {
+        "ru": "Случайное число запроса",
+        "en": "Random number for this request"
+      },
       "kind": "nonce",
       "confidence": "observed"
     },
     "wv-part": {
-      "label": "Номер части записи",
+      "label": {
+        "ru": "Номер части записи",
+        "en": "Chunk number of the recording"
+      },
       "kind": "technical",
       "confidence": "observed"
     },
     "wv-type": {
-      "label": "Тип передаваемых данных записи",
+      "label": {
+        "ru": "Тип передаваемых данных записи",
+        "en": "Type of recording data being sent"
+      },
       "kind": "technical",
       "confidence": "observed"
     }

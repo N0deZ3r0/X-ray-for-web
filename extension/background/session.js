@@ -132,10 +132,13 @@ function roughBytes(session) {
   return session.events.length * 320;
 }
 
+// Код, а не текст. Журнал переживает перезапуск service worker и уходит в
+// экспорт, поэтому язык в нём хранить нельзя: интерфейс переводится, а
+// записанное — нет. Слова подставляет тот, кто показывает.
 function frameKindOf(frameId, frameUrl) {
-  if (frameId === 0) return 'главный документ';
-  if (frameUrl && frameUrl.startsWith('about:')) return 'фрейм ' + frameUrl;
-  return 'фрейм';
+  if (frameId === 0) return 'main';
+  if (frameUrl && frameUrl.startsWith('about:')) return 'about';
+  return 'frame';
 }
 
 // ── Наблюдения изнутри страницы ─────────────────────────────────────────────
@@ -203,7 +206,7 @@ export function applyRecords(session, sender, records, instrumentHealth, bridge)
         bodyText: r.bodyText,
         bodyMime: r.bodyMime,
         // Судьбу не сбрасываем: она могла уже решиться сетевым источником
-        match: (prev && prev.match) || 'ожидает',
+        match: (prev && prev.match) || 'pending',
         seenAt: (prev && prev.seenAt) || Date.now(),
         netType: prev ? prev.netType : null,
         cookiesSent: prev ? prev.cookiesSent : null,
@@ -277,7 +280,7 @@ export function applyRecords(session, sender, records, instrumentHealth, bridge)
 // должно было быть 6 и 3.
 function пара(session, net) {
   for (const e of session.events) {
-    if (e.kind !== 'egress' || e.match !== 'ожидает') continue;
+    if (e.kind !== 'egress' || e.match !== 'pending') continue;
     if (e.url !== net.url || e.method !== net.method) continue;
     return e;
   }
@@ -321,7 +324,7 @@ export function applyNetworkEvent(session, net) {
   session.pendingNetwork.push(net);
   reconcile(session);
   putSession(session);
-  return 'ожидает';
+  return 'pending';
 }
 
 export function applyNetworkHeaders(session, requestId, cookieNames) {
@@ -444,7 +447,7 @@ export function reconcile(session, now) {
   // Наблюдение изнутри, которого сеть так и не увидела.
   let приговорено = 0;
   for (const e of session.events) {
-    if (e.kind !== 'egress' || e.match !== 'ожидает') continue;
+    if (e.kind !== 'egress' || e.match !== 'pending') continue;
     if (t - (e.seenAt || 0) < GRACE_MS) continue;
     приговорено++;
 

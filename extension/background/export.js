@@ -12,7 +12,20 @@
 // Проверяется тестом наизнанку: в золотую сессию кладутся заведомые секреты, и
 // тест ищет их в готовом экспорте. Найдено — провал.
 
-const МЕТКА = '[отредактировано]';
+import { t, n as скл, текст } from './i18n.js';
+
+const МЕТКА = t('redacted');
+
+// Заголовок раздела дополняется линией до одной ширины. Раньше длина линии
+// стояла числом под каждый русский заголовок — на другом языке они разъехались
+// бы, и отчёт, который человек читает глазами, потерял бы вид ровно там, где
+// он должен внушать доверие.
+const ШИРИНА_ОТЧЁТА = 60;
+// Заголовок группы: код от движка либо двуязычный текст из декларации.
+const заголовокГруппы = (g) => (g.titleKey ? t(g.titleKey, ...(g.titleArgs || [])) : текст(g.title));
+
+const рамка = (заголовок) =>
+  заголовок + '─'.repeat(Math.max(3, ШИРИНА_ОТЧЁТА - [...заголовок].length));
 
 // Виды полей, значения которых не покидают машину без отдельного согласия.
 //
@@ -67,7 +80,7 @@ function редактироватьАдрес(url, parsed, счёт) {
   if (!parsed) {
     const сколько = [...u.searchParams.keys()].length;
     счёт.вырезано += сколько;
-    return u.origin + u.pathname + '?[отредактировано: ' + сколько + ' парам.]';
+    return u.origin + u.pathname + t('redacted_query', сколько);
   }
 
   const params = new URLSearchParams();
@@ -86,7 +99,9 @@ function редактироватьРазбор(parsed, счёт) {
   if (!parsed) return null;
   return Object.assign({}, parsed, {
     groups: parsed.groups.map((g) => ({
-      title: g.title,
+      // Копируем группу целиком: и заголовок-код от движка, и заголовок из
+      // декларации. Перечисление полей руками однажды потеряло бы одно из них.
+      ...g,
       fields: g.fields.map((f) => {
         if (!секретное(f.kind)) return f;
         счёт.вырезано++;
@@ -117,7 +132,7 @@ function редактироватьСобытие(e, счёт) {
   // вырезанными секретами.
   if (e.bodyText || e.netBodyText) {
     const длина = (e.bodyText || e.netBodyText).length;
-    out.bodyText = '[отредактировано: тело ' + длина + ' симв.]';
+    out.bodyText = t('redacted_body', длина);
     out.netBodyText = null;
     счёт.вырезано++;
   }
@@ -127,8 +142,11 @@ function редактироватьСобытие(e, счёт) {
 function редактироватьФакт(f, счёт) {
   // Значение факта берётся из наблюдения и может быть идентификатором.
   // Опознаём по тексту самого факта: он собран нами, а не страницей.
-  const опасный = /идентификатор|хеш|откуда вы пришли/i.test(f.text || '');
-  if (!опасный || !f.value) return f;
+  // Раньше здесь искались русские слова в тексте факта. Это работало ровно до
+  // тех пор, пока язык был один: на английском не вырезалось бы ничего, и файл,
+  // который человек считает безопасным, вынес бы наружу настоящие хеши почты.
+  // Теперь решение принимается по виду поля — он код, и он не переводится.
+  if (!секретное(f.kind) || !f.value) return f;
   счёт.вырезано++;
   return Object.assign({}, f, { value: МЕТКА });
 }
@@ -154,10 +172,7 @@ export function собратьЭкспорт(session, свод, { редакци
     // «включена: false» в середине структуры этого не предотвращает.
     ВНИМАНИЕ: редакция
       ? undefined
-      : 'ЭТОТ ФАЙЛ СОХРАНЁН БЕЗ РЕДАКЦИИ. В нём настоящие идентификаторы ' +
-        'устройства и сессии, идентификатор пользователя, хеши почты и телефона, ' +
-        'адрес предыдущей страницы и сырые тела запросов. Не прикладывайте его ' +
-        'к багрепортам и не пересылайте.',
+      : t('report_warning'),
     сформирован: new Date().toISOString(),
     схема: session.schemaVersion,
     сайт: session.origin,
@@ -166,9 +181,8 @@ export function собратьЭкспорт(session, свод, { редакци
       включена: редакция,
       вырезаноЗначений: счёт.вырезано,
       что: редакция
-        ? 'идентификаторы устройства и сессии, идентификатор пользователя, ' +
-          'хеши почты, телефона и имени, адрес предыдущей страницы, сырые тела запросов'
-        : 'ничего',
+        ? t('report_redacted_kinds')
+        : t('report_nothing'),
     },
     факты,
     покрытие: свод ? свод.coverage : null,
@@ -185,11 +199,13 @@ export function собратьЭкспорт(session, свод, { редакци
 function строкаСверки(match) {
   return (
     {
-      confirmed: 'подтверждено сетью',
-      'network-only': 'ПРОШЛО МИМО ПРИБОРА',
-      'hook-only': 'в сеть не ушло',
-      'no-network-source': 'сетью не проверяется',
-      unobserved: 'вне наблюдения',
+      confirmed: t('verdict_confirmed'),
+      // Обход выделен заглавными: это единственное место отчёта, где прибор
+      // повышает голос, и повод для этого есть.
+      'network-only': t('verdict_network_only').toUpperCase(),
+      'hook-only': t('verdict_hook_only'),
+      'no-network-source': t('verdict_no_network_source'),
+      unobserved: t('verdict_unobserved'),
     }[match] || String(match || '')
   );
 }
@@ -198,118 +214,121 @@ export function собратьОтчёт(session, свод, { редакция =
   const { данные, вырезано } = собратьЭкспорт(session, свод, { редакция });
   const L = [];
 
-  L.push('РЕНТГЕН ДЛЯ ВЕБА — отчёт');
+  L.push(t('report_title'));
   L.push('');
-  L.push('Сайт:            ' + данные.сайт);
-  L.push('Запись начата:   ' + данные.началоЗаписи);
-  L.push('Отчёт сформирован: ' + данные.сформирован);
+  L.push(t('report_site') + данные.сайт);
+  L.push(t('report_started') + данные.началоЗаписи);
+  L.push(t('report_generated') + данные.сформирован);
   L.push('');
   L.push(
     редакция
-      ? 'Редакция включена. Вырезано значений: ' + вырезано + '.'
-      : 'РЕДАКЦИЯ ОТКЛЮЧЕНА. В файле настоящие идентификаторы и тела запросов.'
+      ? t('report_redaction_on', вырезано) + '.'
+      : t('report_redaction_off')
   );
-  L.push('Вырезается: ' + данные.редакция.что + '.');
-  L.push('Поля при этом остаются на месте: видно, что они были.');
+  L.push(t('report_stripped_kinds', данные.редакция.что) + '.');
+  L.push(t('report_fields_stay'));
   L.push('');
 
-  L.push('── ЧТО О ВАС УЗНАЛИ ' + '─'.repeat(40));
+  L.push(рамка(t('report_h_facts')));
   L.push('');
-  if (!данные.факты.length) L.push('  Ничего не собрано.');
+  if (!данные.факты.length) L.push(t('report_nothing_collected'));
   for (const f of данные.факты) {
     L.push('  • ' + f.text + (f.value ? ': ' + f.value : ''));
     if (f.note) L.push('    ' + f.note);
-    L.push('    основание: ' + f.evidence.length + ' в журнале');
+    L.push('  ' + t('fact_basis') + скл(f.evidence.length, 'plural_record_lower') + t('fact_basis_suffix'));
   }
   L.push('');
   if (данные.покрытие) {
     L.push(
-      '  Снято поверхностей отпечатка: ' +
-        данные.покрытие.снято +
-        ' из ' +
-        (данные.покрытие.наблюдается == null ? '?' : данные.покрытие.наблюдается)
+      t(
+        'report_coverage',
+        данные.покрытие.снято,
+        данные.покрытие.наблюдается == null ? '?' : данные.покрытие.наблюдается
+      )
     );
-    L.push('  Битов энтропии здесь нет намеренно: без распределения по всем');
-    L.push('  пользователям их не существует, а прибор стоит на одной машине.');
+    L.push(t('report_coverage_why'));
   }
   L.push('');
 
-  L.push('── ЧТО УШЛО НАРУЖУ ' + '─'.repeat(41));
+  L.push(рамка(t('report_h_egress')));
   L.push('');
   const исходящее = данные.события.filter((e) => e.kind === 'egress');
-  if (!исходящее.length) L.push('  Исходящего не было.');
+  if (!исходящее.length) L.push(t('report_no_egress'));
   for (const e of исходящее) {
     L.push('  [' + строкаСверки(e.match) + '] ' + (e.method || '') + ' ' + e.url);
     if (e.attribution && e.attribution.viaExtension) {
-      L.push('    не сайт: другое расширение ' + e.attribution.viaExtension);
+      L.push(t('report_not_site_ext', e.attribution.viaExtension));
     } else if (e.attribution && e.attribution.scriptUrl) {
-      L.push('    источник: ' + e.attribution.scriptUrl + ':' + e.attribution.line);
+      L.push(t('report_source') + e.attribution.scriptUrl + ':' + e.attribution.line);
     } else if (e.source === 'network') {
-      L.push('    источник не определён — наблюдение только из сети');
+      L.push(t('report_source_unknown'));
     }
     if (e.cookiesSent && e.cookiesSent.length) {
-      L.push('    ушли куки: ' + e.cookiesSent.join(', '));
+      L.push(t('report_cookies') + e.cookiesSent.join(', '));
     }
     if (e.parsed) {
       L.push(
-        '    ' + e.parsed.parserTitle + ', схема от ' + e.parsed.parserVersion +
-          ' — разобрано ' + e.parsed.knownCount + ', не опознано ' + e.parsed.unknownCount
+        '    ' +
+          t(
+            'report_parser_line',
+            e.parsed.parserTitle,
+            e.parsed.parserVersion,
+            e.parsed.knownCount,
+            e.parsed.unknownCount
+          )
       );
       for (const g of e.parsed.groups) {
-        if (e.parsed.groups.length > 1) L.push('      ' + g.title);
+        if (e.parsed.groups.length > 1) L.push('      ' + заголовокГруппы(g));
         for (const f of g.fields) {
-          L.push('      ' + (f.label || 'НЕ ОПОЗНАНО') + ' (' + f.name + ') = ' + f.value);
+          L.push('      ' + (текст(f.label) || t('not_identified_caps')) + ' (' + f.name + ') = ' + f.value);
         }
       }
     } else if (e.bodyText) {
-      L.push('    формат не опознан. ' + e.bodyText);
+      L.push(t('report_unparsed') + e.bodyText);
     }
     L.push('');
   }
 
-  L.push('── ЧТО САЙТ ПРОЧИТАЛ ' + '─'.repeat(39));
+  L.push(рамка(t('report_h_log')));
   L.push('');
   const поверхности = данные.события.filter((e) => e.kind === 'surface');
   for (const e of поверхности) {
     const кто =
       e.attribution && e.attribution.viaExtension
-        ? 'не сайт: расширение ' + e.attribution.viaExtension
+        ? t('report_ext_short', e.attribution.viaExtension)
         : e.attribution && e.attribution.scriptUrl
           ? e.attribution.scriptUrl + ':' + e.attribution.line
-          : 'источник не определён';
+          : t('attr_unknown_source');
     L.push(
-      '  ' + (e.t / 1000).toFixed(2) + ' с  ' + e.surface +
+      '  ' + (e.t / 1000).toFixed(2) + t('seconds_suffix') + '  ' + e.surface +
         (e.count > 1 ? ' ×' + e.count : '') +
-        (e.detail === 'counted' ? '  [счётчик]' : '')
+        (e.detail === 'counted' ? t('report_counted') : '')
     );
     L.push('      ' + кто);
-    if (e.arg) L.push('      аргумент: ' + e.arg);
-    if (e.result) L.push('      результат: ' + e.result);
+    if (e.arg) L.push(t('report_arg') + e.arg);
+    if (e.result) L.push(t('report_result') + e.result);
   }
   L.push('');
 
-  L.push('── ЗДОРОВЬЕ ПРИБОРА ' + '─'.repeat(40));
+  L.push(рамка(t('report_h_health')));
   L.push('');
   const h = данные.здоровье;
-  L.push('  Записей: ' + h.eventsRecorded + ', потеряно: ' + h.eventsDropped);
-  L.push('  Потерь на мосту: ' + h.bridgeGaps + ', перезапусков worker: ' + h.swRestarts);
-  L.push('  Вызовов перехвачено: ' + h.callsSeen + ', со снятием стека: ' + h.coldCalls);
+  L.push(t('report_health_records', h.eventsRecorded, h.eventsDropped));
+  L.push(t('report_health_bridge', h.bridgeGaps, h.swRestarts));
+  L.push(t('report_health_calls', h.callsSeen, h.coldCalls));
   L.push(
-    '  Сверка: ' + h.confirmed + ' подтверждено, ' + h.networkOnly + ' мимо прибора, ' +
-      h.hookOnly + ' не дошло до сети, ' + (h.noNetworkSource || 0) + ' нечем проверить'
+    t('report_health_reconcile', h.confirmed, h.networkOnly, h.hookOnly, h.noNetworkSource || 0)
   );
-  if (h.killSwitchTripped) L.push('  ВНИМАНИЕ: прибор снижал детализацию под нагрузкой.');
-  if (h.coldBudgetExhausted) L.push('  ВНИМАНИЕ: бюджет подробностей исчерпан.');
+  if (h.killSwitchTripped) L.push(t('report_warn_killswitch'));
+  if (h.coldBudgetExhausted) L.push(t('report_warn_budget'));
   L.push('');
 
-  L.push('── ПРЕДЕЛЫ ' + '─'.repeat(49));
+  L.push(рамка(t('report_h_limits')));
   L.push('');
-  L.push('  Прибор наблюдает, а не защищает. Он ничего не заблокировал.');
-  L.push('  Воркеры не наблюдаются: отпечаток внутри воркера прибору не виден.');
-  L.push('  Другие расширения браузера подменяют те же API; их вызовы помечены');
-  L.push('  «не сайт», но отличить их собственную инициативу от просьбы страницы');
-  L.push('  прибор не может.');
-  L.push('  «Источник не определён» — признание незнания, а не улика.');
+  L.push(t('report_limit_no_block'));
+  L.push(t('report_limit_workers'));
+  L.push(t('report_limit_extensions'));
+  L.push(t('report_limit_unknown'));
   L.push('');
 
   return L.join('\n');

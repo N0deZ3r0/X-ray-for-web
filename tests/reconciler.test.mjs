@@ -12,10 +12,7 @@
 //
 // Запуск: node tests/reconciler.test.mjs
 
-import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { загрузить } from './lib/zagruzka.mjs';
 
 // ── Заглушка chrome для модуля журнала ──────────────────────────────────────
 const store = {};
@@ -42,11 +39,9 @@ if (!globalThis.crypto.randomUUID) {
   globalThis.crypto.randomUUID = () => 'uuid-' + ++n;
 }
 
-const dir = join(tmpdir(), 'xray-tests');
-mkdirSync(dir, { recursive: true });
-const copy = join(dir, 'session.mjs');
-writeFileSync(copy, readFileSync(new URL('../extension/background/session.js', import.meta.url)));
-const S = await import(pathToFileURL(copy).href);
+const { модуль: S, убрать } = await загрузить('session-tests', [
+  'extension/background/session.js',
+]);
 
 // ── Данные стенда ───────────────────────────────────────────────────────────
 const B = 'http://localhost:8081';
@@ -207,7 +202,7 @@ for (const порядок of ['сеть-первой', 'изнутри-перв�
       по('network-only').map((e) => e.url),
     ],
     ['не дошло до сети = 0', по('hook-only').length === 0, по('hook-only').length],
-    ['ничего не осталось в ожидании', по('ожидает').length === 0, по('ожидает').length],
+    ['ничего не осталось в ожидании', по('pending').length === 0, по('pending').length],
     // Шум считается, но в журнал не попадает: обвинять его не в чем, а списком
     // он утопил бы маячки. На реальном сайте таких запросов сотни.
     ['шум посчитан вне наблюдения = 34', session.health.unobserved === 34, session.health.unobserved],
@@ -286,5 +281,5 @@ for (const порядок of ['сеть-первой', 'изнутри-перв�
 }
 
 console.log(провал ? провал + ' проверок провалено' : 'все проверки пройдены во всех трёх порядках');
-rmSync(dir, { recursive: true, force: true });
+убрать();
 process.exit(провал ? 1 : 0);

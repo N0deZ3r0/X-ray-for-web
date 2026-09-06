@@ -141,7 +141,7 @@ footer { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 10px;
 .m-hook-only { color: var(--inline); border: 1px solid currentColor; }
 .m-unobserved { color: var(--dim); border: 1px solid var(--line); }
 .m-no-network-source { color: var(--dim); border: 1px dashed currentColor; }
-.m-ожидает { color: var(--dim); border: 1px dashed var(--line); }
+.m-pending { color: var(--dim); border: 1px dashed var(--line); }
 
 .verdict {
   margin: 8px 0; padding: 8px 10px; border-radius: 6px;

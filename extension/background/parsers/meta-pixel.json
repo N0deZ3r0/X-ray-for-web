@@ -1,97 +1,276 @@
 {
   "id": "meta-pixel",
-  "title": "Meta Pixel (Facebook)",
+  "title": {
+    "ru": "Meta Pixel (Facebook)",
+    "en": "Meta Pixel (Facebook)"
+  },
   "version": "2026-09",
-
-  "note": "Meta не публикует список параметров /tr. Поля получены наблюдением. Группа ud[...] — это Advanced Matching: данные о человеке, хешированные SHA-256 и отправляемые для сопоставления с профилем в Facebook и Instagram.",
-
+  "note": {
+    "ru": "Meta не публикует список параметров /tr. Поля получены наблюдением. Группа ud[...] — это Advanced Matching: данные о человеке, хешированные SHA-256 и отправляемые для сопоставления с профилем в Facebook и Instagram.",
+    "en": "Meta does not publish the list of /tr parameters. The fields come from observation. The ud[...] group is Advanced Matching: data about a person, hashed with SHA-256 and sent to be matched against their Facebook and Instagram profile."
+  },
   "match": {
-    "host": ["www.facebook.com", "facebook.com", "*.facebook.com"],
+    "host": [
+      "www.facebook.com",
+      "facebook.com",
+      "*.facebook.com"
+    ],
     "path": "^/tr"
   },
-
   "extract": [
-    { "from": "query" },
-    { "from": "body", "format": "urlencoded" }
+    {
+      "from": "query"
+    },
+    {
+      "from": "body",
+      "format": "urlencoded"
+    }
   ],
-
   "fields": {
     "id": {
-      "label": "Идентификатор пикселя",
+      "label": {
+        "ru": "Идентификатор пикселя",
+        "en": "Pixel identifier"
+      },
       "kind": "site-id",
       "confidence": "observed",
-      "note": "Кому именно уходят данные — рекламный кабинет владельца пикселя"
+      "note": {
+        "ru": "Кому именно уходят данные — рекламный кабинет владельца пикселя",
+        "en": "Exactly who the data goes to — the ad account of whoever owns the pixel"
+      }
     },
     "ev": {
-      "label": "Название события",
+      "label": {
+        "ru": "Название события",
+        "en": "Event name"
+      },
       "kind": "event-name",
       "confidence": "observed",
-      "note": "PageView — просмотр, Purchase — покупка, Lead — заявка, ViewContent — просмотр товара"
+      "note": {
+        "ru": "PageView — просмотр, Purchase — покупка, Lead — заявка, ViewContent — просмотр товара",
+        "en": "PageView — a view, Purchase — a purchase, Lead — an enquiry, ViewContent — a product view"
+      }
     },
-    "dl": { "label": "Адрес страницы", "kind": "page-url", "confidence": "observed" },
+    "dl": {
+      "label": {
+        "ru": "Адрес страницы",
+        "en": "Page address"
+      },
+      "kind": "page-url",
+      "confidence": "observed"
+    },
     "rl": {
-      "label": "Откуда вы пришли",
+      "label": {
+        "ru": "Откуда вы пришли",
+        "en": "Where you came from"
+      },
       "kind": "referrer",
       "confidence": "observed"
     },
-    "ts": { "label": "Время отправки", "kind": "timing", "confidence": "observed" },
-    "sw": { "label": "Ширина экрана", "kind": "screen", "confidence": "observed" },
-    "sh": { "label": "Высота экрана", "kind": "screen", "confidence": "observed" },
-    "v": { "label": "Версия библиотеки", "kind": "technical", "confidence": "observed" },
-    "r": { "label": "Ветка сборки", "kind": "technical", "confidence": "observed" },
-    "a": { "label": "Через какую интеграцию", "kind": "technical", "confidence": "observed" },
-    "it": { "label": "Когда пиксель загрузился", "kind": "timing", "confidence": "observed" },
-    "coo": {
-      "label": "Разрешены ли собственные куки пикселя",
+    "ts": {
+      "label": {
+        "ru": "Время отправки",
+        "en": "Time of sending"
+      },
+      "kind": "timing",
+      "confidence": "observed"
+    },
+    "sw": {
+      "label": {
+        "ru": "Ширина экрана",
+        "en": "Screen width"
+      },
+      "kind": "screen",
+      "confidence": "observed"
+    },
+    "sh": {
+      "label": {
+        "ru": "Высота экрана",
+        "en": "Screen height"
+      },
+      "kind": "screen",
+      "confidence": "observed"
+    },
+    "v": {
+      "label": {
+        "ru": "Версия библиотеки",
+        "en": "Library version"
+      },
       "kind": "technical",
       "confidence": "observed"
     },
-    "es": { "label": "Источник события", "kind": "technical", "confidence": "observed" },
-    "eid": { "label": "Идентификатор события", "kind": "session-id", "confidence": "observed" },
-
+    "r": {
+      "label": {
+        "ru": "Ветка сборки",
+        "en": "Build branch"
+      },
+      "kind": "technical",
+      "confidence": "observed"
+    },
+    "a": {
+      "label": {
+        "ru": "Через какую интеграцию",
+        "en": "Which integration it came through"
+      },
+      "kind": "technical",
+      "confidence": "observed"
+    },
+    "it": {
+      "label": {
+        "ru": "Когда пиксель загрузился",
+        "en": "When the pixel loaded"
+      },
+      "kind": "timing",
+      "confidence": "observed"
+    },
+    "coo": {
+      "label": {
+        "ru": "Разрешены ли собственные куки пикселя",
+        "en": "Whether the pixel’s own cookies are allowed"
+      },
+      "kind": "technical",
+      "confidence": "observed"
+    },
+    "es": {
+      "label": {
+        "ru": "Источник события",
+        "en": "Event source"
+      },
+      "kind": "technical",
+      "confidence": "observed"
+    },
+    "eid": {
+      "label": {
+        "ru": "Идентификатор события",
+        "en": "Event identifier"
+      },
+      "kind": "session-id",
+      "confidence": "observed"
+    },
     "ud[em]": {
-      "label": "Хеш вашего адреса электронной почты",
+      "label": {
+        "ru": "Хеш вашего адреса электронной почты",
+        "en": "Hash of your email address"
+      },
       "kind": "email-hash",
       "confidence": "observed",
-      "note": "SHA-256. Расшифровать нельзя, но он одинаков на всех сайтах — по нему вас узнают в профиле Facebook"
+      "note": {
+        "ru": "SHA-256. Расшифровать нельзя, но он одинаков на всех сайтах — по нему вас узнают в профиле Facebook",
+        "en": "SHA-256. It cannot be reversed, but it is the same on every site — this is what identifies you in your Facebook profile"
+      }
     },
     "ud[ph]": {
-      "label": "Хеш вашего номера телефона",
+      "label": {
+        "ru": "Хеш вашего номера телефона",
+        "en": "Hash of your phone number"
+      },
       "kind": "phone-hash",
       "confidence": "observed",
-      "note": "SHA-256, тот же приём сопоставления с профилем"
+      "note": {
+        "ru": "SHA-256, тот же приём сопоставления с профилем",
+        "en": "SHA-256, the same profile-matching trick"
+      }
     },
-    "ud[fn]": { "label": "Хеш вашего имени", "kind": "name-hash", "confidence": "observed" },
-    "ud[ln]": { "label": "Хеш вашей фамилии", "kind": "name-hash", "confidence": "observed" },
+    "ud[fn]": {
+      "label": {
+        "ru": "Хеш вашего имени",
+        "en": "Hash of your first name"
+      },
+      "kind": "name-hash",
+      "confidence": "observed"
+    },
+    "ud[ln]": {
+      "label": {
+        "ru": "Хеш вашей фамилии",
+        "en": "Hash of your surname"
+      },
+      "kind": "name-hash",
+      "confidence": "observed"
+    },
     "ud[external_id]": {
-      "label": "Ваш идентификатор в системе сайта",
+      "label": {
+        "ru": "Ваш идентификатор в системе сайта",
+        "en": "Your identifier in the site’s own system"
+      },
       "kind": "user-id",
       "confidence": "observed",
-      "note": "Связывает визит с вашей учётной записью на сайте"
+      "note": {
+        "ru": "Связывает визит с вашей учётной записью на сайте",
+        "en": "Ties the visit to your account on the site"
+      }
     },
-    "ud[ge]": { "label": "Хеш вашего пола", "kind": "personal-hash", "confidence": "observed" },
-    "ud[db]": { "label": "Хеш вашей даты рождения", "kind": "personal-hash", "confidence": "observed" },
-    "ud[ct]": { "label": "Хеш вашего города", "kind": "personal-hash", "confidence": "observed" },
-    "ud[st]": { "label": "Хеш вашего региона", "kind": "personal-hash", "confidence": "observed" },
-    "ud[zp]": { "label": "Хеш вашего почтового индекса", "kind": "personal-hash", "confidence": "observed" },
-    "ud[country]": { "label": "Хеш вашей страны", "kind": "personal-hash", "confidence": "observed" }
+    "ud[ge]": {
+      "label": {
+        "ru": "Хеш вашего пола",
+        "en": "Hash of your gender"
+      },
+      "kind": "personal-hash",
+      "confidence": "observed"
+    },
+    "ud[db]": {
+      "label": {
+        "ru": "Хеш вашей даты рождения",
+        "en": "Hash of your date of birth"
+      },
+      "kind": "personal-hash",
+      "confidence": "observed"
+    },
+    "ud[ct]": {
+      "label": {
+        "ru": "Хеш вашего города",
+        "en": "Hash of your city"
+      },
+      "kind": "personal-hash",
+      "confidence": "observed"
+    },
+    "ud[st]": {
+      "label": {
+        "ru": "Хеш вашего региона",
+        "en": "Hash of your region"
+      },
+      "kind": "personal-hash",
+      "confidence": "observed"
+    },
+    "ud[zp]": {
+      "label": {
+        "ru": "Хеш вашего почтового индекса",
+        "en": "Hash of your postcode"
+      },
+      "kind": "personal-hash",
+      "confidence": "observed"
+    },
+    "ud[country]": {
+      "label": {
+        "ru": "Хеш вашей страны",
+        "en": "Hash of your country"
+      },
+      "kind": "personal-hash",
+      "confidence": "observed"
+    }
   },
-
   "patterns": [
     {
       "test": "^cd\\[",
-      "label": "Данные события, заданные сайтом",
+      "label": {
+        "ru": "Данные события, заданные сайтом",
+        "en": "Event data set by the site"
+      },
       "kind": "event-param",
       "confidence": "observed"
     },
     {
       "test": "^ud\\[",
-      "label": "Данные о вас для сопоставления с профилем",
+      "label": {
+        "ru": "Данные о вас для сопоставления с профилем",
+        "en": "Data about you, for profile matching"
+      },
       "kind": "personal-hash",
       "confidence": "observed",
-      "note": "Поле из группы Advanced Matching, точное назначение не установлено. Показано как есть и вырезается при экспорте"
+      "note": {
+        "ru": "Поле из группы Advanced Matching, точное назначение не установлено. Показано как есть и вырезается при экспорте",
+        "en": "A field from the Advanced Matching group; its exact purpose has not been established. Shown as-is and stripped on export"
+      }
     }
   ],
-
   "unknown": "preserve"
 }

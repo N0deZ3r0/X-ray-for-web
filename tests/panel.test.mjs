@@ -20,9 +20,17 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { создатьDOM } from './lib/dom.mjs';
 
+import { поставитьI18n } from './lib/zagruzka.mjs';
+
 const корень = new URL('../extension/ui/', import.meta.url);
 const html = readFileSync(new URL('panel.html', корень), 'utf8');
+const кодI18n = readFileSync(new URL('i18n.js', корень), 'utf8');
 const код = readFileSync(new URL('panel.js', корень), 'utf8');
+
+// Панель берёт слова из chrome.i18n. Ставим настоящий источник строк и русский
+// язык: проверки сверяют формулировки, и подмена их выдуманными сделала бы
+// набор проверкой самого себя.
+const i18n = await поставитьI18n('ru');
 
 // Идентификаторы берём из настоящей разметки: если панель попросит элемент,
 // которого в panel.html нет, тест упадёт — а в браузере это была бы тихая
@@ -51,7 +59,7 @@ const поверхность = (surface, group, extra = {}) =>
       group,
       frameId: 0,
       frameUrl: 'https://site.example/',
-      frameKind: 'главный документ',
+      frameKind: 'main',
       t: n * 10,
       count: 1,
       detail: null,
@@ -74,13 +82,13 @@ const события = [
   поверхность('webgl.getExtension', 'webgl', { attribution: ТРЕТИЙ }),
   поверхность('audio.OfflineAudioContext', 'audio'),
   поверхность('fonts.check', 'fonts', { attribution: ЧУЖОЕ_РАСШИРЕНИЕ }),
-  поверхность('navigator.platform', 'device', { frameId: 3, frameKind: 'сторонний фрейм' }),
+  поверхность('navigator.platform', 'device', { frameId: 3, frameKind: 'frame' }),
   {
     id: 'i0',
     kind: 'installed',
     frameId: 0,
     frameUrl: 'https://site.example/',
-    frameKind: 'главный документ',
+    frameKind: 'main',
     t: 1,
     arg: '67 поверхностей',
     attribution: null,
@@ -124,7 +132,14 @@ function сеанс() {
 
 // ── Заглушки браузера ───────────────────────────────────────────────────────
 
-const { document } = создатьDOM(идентификаторы);
+const { document, body } = создатьDOM(идентификаторы);
+
+// Панель при запуске обходит document.querySelectorAll('[data-i18n]'). В нашем
+// DOM атрибутов нет: узлы создаются по идентификаторам из разметки, а не
+// разбором HTML. Возвращаем пустой список — заполнение статической разметки
+// проверяется не здесь.
+document.querySelectorAll = () => [];
+document.documentElement = { lang: '' };
 
 const журналЗапросов = [];
 let состояние = { rev: '1:7', recording: false, entry: null, session: сеанс(), facts: null };
@@ -132,6 +147,7 @@ let запрошеноРазрешение = 0;
 let портПодписчик = null;
 
 const chrome = {
+  i18n,
   runtime: {
     lastError: undefined,
     connect: () => ({
@@ -178,8 +194,13 @@ const песочница = {
   Promise,
 };
 песочница.window = песочница;
+// В боковой панели self и window — одно и то же окно; i18n.js кладёт себя в self.
+песочница.self = песочница;
 песочница.globalThis = песочница;
 
+// i18n.js кладёт себя в self — так же, как в браузере, где panel.html
+// подключает его отдельным <script> перед панелью.
+runInNewContext(кодI18n, песочница, { filename: 'i18n.js' });
 runInNewContext(код, песочница, { filename: 'panel.js' });
 
 const пауза = (мс = 0) => new Promise((r) => setTimeout(r, мс));

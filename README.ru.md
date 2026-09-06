@@ -7,7 +7,7 @@
 [![CI](https://github.com/N0deZ3r0/X-ray-for-web/actions/workflows/ci.yml/badge.svg)](https://github.com/N0deZ3r0/X-ray-for-web/actions/workflows/ci.yml)
 ![version](https://img.shields.io/badge/version-0.1.0-3b5bdb)
 ![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-4c6ef5)
-![проверок](https://img.shields.io/badge/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BE%D0%BA-182-2f9e44)
+![проверок](https://img.shields.io/badge/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BE%D0%BA-197-2f9e44)
 ![зависимостей](https://img.shields.io/badge/%D0%B7%D0%B0%D0%B2%D0%B8%D1%81%D0%B8%D0%BC%D0%BE%D1%81%D1%82%D0%B5%D0%B9-0-2f9e44)
 
 [English](README.md) · **Русский**
@@ -67,7 +67,11 @@ POST https://www.facebook.com/tr        подтверждено сетью
 
 Нужен Chrome 119 или новее.
 
-> Интерфейс расширения на русском. Английский README — [README.md](README.md).
+> **Язык интерфейса берётся из браузера.** Chrome на русском — русская панель и
+> русский отчёт; любой другой язык — английский. Оба перевода растут из одного
+> источника, `tools/messages.mjs`, где языки стоят рядом строкой, и CI роняет сборку,
+> если сгенерированные `_locales` с ним разошлись. Документы основания и комментарии
+> в коде — на русском. Английский README — [README.md](README.md).
 
 ## Как снять сеанс
 
@@ -133,7 +137,7 @@ node bench/server.js
 node tests/run.mjs
 ```
 
-182 проверки в пяти наборах, без единой зависимости — только `node`. Самый
+197 проверок в шести наборах, без единой зависимости — только `node`. Самый
 важный набор не тот, что проверяет разбор, а `tests/facts.test.mjs`: уберите
 событие — исчезнет факт. Прибор не имеет права утверждать то, чего не записал.
 
@@ -187,10 +191,11 @@ extension/     само расширение (эту папку загружае
     parsers/   декларации форматов — JSON, не код
   ui/          боковая панель
   icons/       значки, сгенерированы tools/icons.mjs
+  _locales/    ru и en, сгенерированы tools/messages.mjs
 bench/         стенд с намеренным фингерпринтингом, два origin
 docs/          документы основания
 tests/         тесты, запускаются голым node
-tools/         генератор значков
+tools/         генераторы: значки и два файла локалей
 ```
 
 ## Платформа

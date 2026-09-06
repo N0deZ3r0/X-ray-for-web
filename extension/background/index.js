@@ -24,6 +24,7 @@ import { setNotify } from './webrequest.js';
 
 import { разобратьИсходящее } from './parsers/index.js';
 import { выводитьФакты } from './facts.js';
+import { t } from './i18n.js';
 import { собратьЭкспорт, собратьОтчёт } from './export.js';
 
 const RECORDING_KEY = 'recording';
@@ -255,7 +256,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     (async () => {
       const session = await getSession(message.tabId);
       if (!session) {
-        sendResponse({ ok: false, error: 'записи нет' });
+        sendResponse({ ok: false, error: t('report_no_recording') });
         return;
       }
       reconcile(session);
@@ -278,10 +279,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         json: JSON.stringify(данные, null, 2),
         // Имя файла — последняя линия обороны: его видно в списке загрузок и
         // во вложении письма, когда содержимое уже никто не читает.
+        // Имя файла остаётся латиницей независимо от языка интерфейса:
+        // его увидит файловая система, почтовый клиент и багтрекер, а там
+        // кириллица превращается в проценты и знаки вопроса.
         имя:
-          'рентген-' +
-          (session.origin || 'сессия').replace(/[^a-zA-Zа-яА-Я0-9]+/g, '-') +
-          (редакция ? '' : '-БЕЗ-РЕДАКЦИИ'),
+          'xray-' +
+          (session.origin || 'session').replace(/[^a-zA-Z0-9]+/g, '-') +
+          (редакция ? '' : '-NOT-REDACTED'),
       });
     })();
     return true;

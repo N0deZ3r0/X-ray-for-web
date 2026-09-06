@@ -39,6 +39,16 @@ jobs:
       # honest — if one ever appears, this step will not install it.
       - run: node tests/run.mjs
 
+      # The locale files are generated from tools/messages.mjs, where the two
+      # languages sit side by side. Regenerating must change nothing: if it does,
+      # someone edited _locales by hand and the two languages have started to
+      # drift — which is exactly the failure that shows up only for users whose
+      # browser is in the other language.
+      - name: locales are in sync with their source
+        run: |
+          node tools/messages.mjs
+          git diff --exit-code -- extension/_locales
+
       # The icons are generated, not drawn. Regenerating them must produce byte-identical
       # files; if it does not, either the generator changed without the icons being
       # rebuilt, or the icons were edited by hand and the generator no longer describes

@@ -7,16 +7,23 @@
 //
 // Запуск: node tests/parsers.test.mjs
 
-import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { readFileSync } from 'node:fs';
+import { загрузить } from './lib/zagruzka.mjs';
 
-const dir = join(tmpdir(), 'xray-parser-tests');
-mkdirSync(dir, { recursive: true });
-const copy = join(dir, 'engine.mjs');
-writeFileSync(copy, readFileSync(new URL('../extension/background/parsers/engine.js', import.meta.url)));
-const E = await import(pathToFileURL(copy).href);
+// Движок намеренно не знает языков: он отдаёт коды заголовков и метки как есть.
+// Поэтому chrome ему не нужен, и заглушка перевода здесь не ставится.
+const { модуль: E, убрать } = await загрузить('parser-tests', [
+  'extension/background/parsers/engine.js',
+]);
+
+// Метка и примечание в декларации — это данные, и они двуязычны: {ru, en}.
+// Движок отдаёт их как есть, не выбирая язык, поэтому выбирает тест. Сверяем
+// русский: на нём формулировки писались и на нём их читал автор.
+const ру = (v) => (v && typeof v === 'object' ? v.ru : v);
+
+// Заголовок группы приходит либо кодом от движка (group_query), либо текстом
+// из декларации. Для проверок нам нужно человекочитаемое — берём что есть.
+const заг = (g) => (g.titleKey ? g.titleKey : ру(g.title));
 
 const ga4 = JSON.parse(
   readFileSync(new URL('../extension/background/parsers/ga4.json', import.meta.url), 'utf8')
@@ -97,12 +104,12 @@ const найти = (список, имя) => список.find((f) => f.name ===
 
 проверить(
   'cid назван идентификатором браузера',
-  найти(поля1, 'cid').label === 'Идентификатор вашего браузера',
+  ру(найти(поля1, 'cid').label) === 'Идентификатор вашего браузера',
   найти(поля1, 'cid')
 );
 проверить(
   'cid снабжён пояснением про два года',
-  (найти(поля1, 'cid').note || '').includes('два года'),
+  (ру(найти(поля1, 'cid').note) || '').includes('два года'),
   найти(поля1, 'cid').note
 );
 проверить(
@@ -122,7 +129,7 @@ const найти = (список, имя) => список.find((f) => f.name ===
 );
 проверить(
   'ep.section опознан шаблоном',
-  найти(поля1, 'ep.section').label === 'Параметр события',
+  ру(найти(поля1, 'ep.section').label) === 'Параметр события',
   найти(поля1, 'ep.section')
 );
 проверить(
@@ -153,7 +160,7 @@ const неизвестное = найти(поля1, '_bench_unknown_field');
 
 // ── Разбор пачки ────────────────────────────────────────────────────────────
 const r2 = реестр.разобрать('https://www.google-analytics.com/g/collect?v=2&tid=G-ABC123DEF4', пачкаPOST);
-const событий = r2 ? r2.groups.filter((g) => g.title.startsWith('Событие')).length : 0;
+const событий = r2 ? r2.groups.filter((g) => g.titleKey === 'group_body_event').length : 0;
 проверить('пачка разобрана на три события, а не одно', событий === 3, событий);
 проверить(
   'у каждого события своё название',
@@ -224,12 +231,12 @@ const событий = r2 ? r2.groups.filter((g) => g.title.startsWith('Собы
   проверить('Meta: разборщик выбран', r && r.parserId === 'meta-pixel', r && r.parserId);
   проверить(
     'Meta: хеш почты назван словами',
-    f('ud[em]') && f('ud[em]').kind === 'email-hash' && /почты/.test(f('ud[em]').label),
+    f('ud[em]') && f('ud[em]').kind === 'email-hash' && /почты/.test(ру(f('ud[em]').label)),
     f('ud[em]')
   );
   проверить(
     'Meta: у хеша почты сказано, чем он опасен',
-    /одинаков на всех сайтах/.test((f('ud[em]') || {}).note || ''),
+    /одинаков на всех сайтах/.test(ру((f('ud[em]') || {}).note) || ''),
     (f('ud[em]') || {}).note
   );
   проверить('Meta: хеш телефона назван', f('ud[ph]') && f('ud[ph]').kind === 'phone-hash', f('ud[ph]'));
@@ -253,7 +260,7 @@ const событий = r2 ? r2.groups.filter((g) => g.title.startsWith('Собы
   );
   проверить(
     'Meta: у него оговорено, что точное назначение не установлено',
-    /не установлено/.test((f('ud[неизвестное]') || {}).note || ''),
+    /не установлено/.test(ру((f('ud[неизвестное]') || {}).note) || ''),
     'оговорки нет'
   );
   проверить('Meta: постороннее поле не опознано', f('неведомое') && f('неведомое').label === null, f('неведомое'));
@@ -284,8 +291,8 @@ const событий = r2 ? r2.groups.filter((g) => g.title.startsWith('Собы
   );
   проверить(
     'Метрика: browser-info распакован',
-    r && r.groups.some((g) => /browser-info/.test(g.title)),
-    r && r.groups.map((g) => g.title)
+    r && r.groups.some((g) => /browser-info/.test(заг(g) || '')),
+    r && r.groups.map(заг)
   );
   проверить(
     'Метрика: идентификатор браузера найден внутри упаковки',
@@ -309,7 +316,7 @@ const событий = r2 ? r2.groups.filter((g) => g.title.startsWith('Собы
     'https://mc.yandex.ru/watch/999?browser-info=u%3A123%3Aочень_длинный_ключ%3Aa%3Ab%3Ac';
   const r = реестр.разобрать(кривой, null);
   const поля = r ? r.groups.flatMap((g) => g.fields) : [];
-  const остаток = поля.find((x) => x.name === 'browser-info:остаток');
+  const остаток = поля.find((x) => x.name === 'browser-info:rest');
   проверить(
     'Метрика: до сбоя поля разобраны',
     поля.some((x) => x.name === 'u' && x.value === '123'),
@@ -329,8 +336,8 @@ const событий = r2 ? r2.groups.filter((g) => g.title.startsWith('Собы
   проверить('Вебвизор: свой разборщик', r && r.parserId === 'yandex-webvisor', r && r.parserId);
   проверить(
     'Вебвизор: в названии сказано, что это запись действий',
-    r && /запись действий/i.test(r.parserTitle),
-    r && r.parserTitle
+    r && /запись действий/i.test(ру(r.parserTitle)),
+    r && ру(r.parserTitle)
   );
   проверить(
     'Вебвизор не путается с Метрикой: пути не пересекаются',
@@ -355,5 +362,5 @@ for (const [имя, ок, факт] of проверки) {
 }
 console.log('');
 console.log(провал ? провал + ' проверок провалено' : 'все ' + проверки.length + ' проверок пройдены');
-rmSync(dir, { recursive: true, force: true });
+убрать();
 process.exit(провал ? 1 : 0);

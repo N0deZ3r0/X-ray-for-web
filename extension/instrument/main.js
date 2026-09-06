@@ -213,7 +213,7 @@
   }
 
   function collapse(meta, at) {
-    const key = meta.surface + '|счётчик';
+    const key = meta.surface + '|counted';
     let rec = records.get(key);
     if (!rec) {
       rec = newRecord({
@@ -303,7 +303,7 @@
 
     let key = attr
       ? meta.surface + '|' + attr.scriptUrl + ':' + attr.line + ':' + attr.column
-      : meta.surface + '|источник не определён';
+      : meta.surface + '|unknown-source';
     if (meta.keyByArg && argText) key += '|' + argText;
 
     let rec = records.get(key);
@@ -615,7 +615,7 @@
 
   const glName = (v) => GL_NAMES.get(v) || '0x' + Number(v).toString(16);
   const short = (v) => (v == null ? '' : String(v).slice(0, 120));
-  const listLen = (v) => (v && v.length != null ? v.length + ' шт.' : short(v));
+  const listLen = (v) => (v && v.length != null ? 'n:' + v.length : short(v));
 
   // ── Исходящее (Э2) ────────────────────────────────────────────────────────
   //
@@ -643,7 +643,7 @@
       if (typeof FormData !== 'undefined' && b instanceof FormData) {
         const parts = [];
         for (const pair of b.entries()) {
-          parts.push(pair[0] + '=' + (typeof pair[1] === 'string' ? pair[1] : '[файл]'));
+          parts.push(pair[0] + '=' + (typeof pair[1] === 'string' ? pair[1] : '[file]'));
         }
         const t = parts.join('&');
         return { form: 'text', size: t.length, text: t.slice(0, 4000) };
@@ -865,7 +865,7 @@
   install('method', CANVAS, 'toDataURL', {
     surface: 'canvas.toDataURL', group: 'canvas', cls: 'A',
     arg: (a) => (a.length ? String(a[0]) : 'image/png'),
-    result: (r) => (typeof r === 'string' ? r.length + ' символов' : ''),
+    result: (r) => (typeof r === 'string' ? 'chars:' + r.length : ''),
   });
   install('method', CANVAS, 'toBlob', {
     surface: 'canvas.toBlob', group: 'canvas', cls: 'A',
@@ -876,7 +876,7 @@
   });
   install('method', C2D, 'getImageData', {
     surface: 'canvas.getImageData', group: 'canvas', cls: 'C',
-    arg: (a) => a[2] + 'x' + a[3] + ' от (' + a[0] + ',' + a[1] + ')',
+    arg: (a) => 'rect:' + a[2] + 'x' + a[3] + '@' + a[0] + ',' + a[1],
   });
   install('method', C2D, 'measureText', {
     surface: 'canvas.measureText', group: 'canvas', cls: 'C',
@@ -902,7 +902,7 @@
     install('method', P, 'getExtension', {
       surface: 'webgl.getExtension', group: 'webgl', cls: 'B', keyByArg: true,
       arg: (a) => String(a[0]),
-      result: (r) => (r ? 'выдано' : 'нет'),
+      result: (r) => (r ? 'yes' : 'no'),
     });
     install('method', P, 'getSupportedExtensions', {
       surface: 'webgl.getSupportedExtensions', group: 'webgl', cls: 'A', result: listLen,
@@ -921,7 +921,7 @@
   // ── аудио ─────────────────────────────────────────────────────────────────
   install('ctor', W, 'OfflineAudioContext', {
     surface: 'audio.OfflineAudioContext', group: 'audio', cls: 'A',
-    arg: (a) => (a.length > 1 ? a[0] + ' кан., ' + a[1] + ' сэмпл.' : ''),
+    arg: (a) => (a.length > 1 ? 'audio:' + a[0] + ',' + a[1] : ''),
   });
   install('ctor', W, 'AudioContext', { surface: 'audio.AudioContext', group: 'audio', cls: 'A' });
 
@@ -944,7 +944,7 @@
     install('method', Object.getPrototypeOf(document.fonts), 'check', {
       surface: 'fonts.check', group: 'fonts', cls: 'B', keyByArg: true,
       arg: (a) => String(a[0]).slice(0, 60),
-      result: (r) => (r ? 'есть' : 'нет'),
+      result: (r) => (r ? 'yes' : 'no'),
     });
   }
 
@@ -983,7 +983,7 @@
   install('method', W, 'matchMedia', {
     surface: 'window.matchMedia', group: 'device', cls: 'B', keyByArg: true,
     arg: (a) => String(a[0]).slice(0, 80),
-    result: (r) => (r && r.matches ? 'да' : 'нет'),
+    result: (r) => (r && r.matches ? 'yes' : 'no'),
   });
   if (W.NavigatorUAData) {
     install('method', proto('NavigatorUAData'), 'getHighEntropyValues', {
@@ -997,7 +997,7 @@
   // достаточно для факта и безопасно для экспорта (03-data-model.md).
   install('accessor', proto('Document'), 'cookie', {
     surface: 'cookie.read', group: 'storage', cls: 'B',
-    result: (r) => (r ? String(r).split(';').length + ' куки' : 'пусто'),
+    result: (r) => 'cookies:' + (r ? String(r).split(';').length : 0),
     onSet: {
       surface: 'cookie.write', group: 'storage', cls: 'B', keyByArg: true,
       arg: (a) => {
@@ -1005,8 +1005,8 @@
         const name = s.split('=')[0].trim();
         const age = /max-age=(\d+)/i.exec(s);
         const exp = /expires=([^;]+)/i.exec(s);
-        if (age) return name + ', живёт ' + Math.round(+age[1] / 86400) + ' дн.';
-        if (exp) return name + ', до ' + exp[1].trim();
+        if (age) return name + ' | days:' + Math.round(+age[1] / 86400);
+        if (exp) return name + ' | until:' + exp[1].trim();
         return name;
       },
     },
@@ -1015,7 +1015,7 @@
   const STORAGE = proto('Storage');
   install('method', STORAGE, 'setItem', {
     surface: 'localStorage.setItem', group: 'storage', cls: 'B', keyByArg: true,
-    arg: (a) => String(a[0]).slice(0, 60) + ' (' + String(a[1]).length + ' симв.)',
+    arg: (a) => String(a[0]).slice(0, 60) + ' | chars:' + String(a[1]).length,
   });
   install('method', STORAGE, 'getItem', {
     surface: 'localStorage.getItem', group: 'storage', cls: 'B', keyByArg: true,
@@ -1081,7 +1081,7 @@
     surface: 'shadow.iframe.srcdoc.read', group: 'shadow', cls: 'A',
     onSet: {
       surface: 'shadow.iframe.srcdoc', group: 'shadow', cls: 'A',
-      arg: (a) => String(a[0]).length + ' символов разметки',
+      arg: (a) => 'html:' + String(a[0]).length,
     },
   });
   install('accessor', proto('HTMLScriptElement'), 'src', {
@@ -1097,7 +1097,7 @@
   const DOC = proto('Document');
   install('method', DOC, 'write', {
     surface: 'shadow.document.write', group: 'shadow', cls: 'B',
-    arg: (a) => String(a[0] == null ? '' : a[0]).length + ' символов',
+    arg: (a) => 'chars:' + String(a[0] == null ? '' : a[0]).length,
   });
   install('method', DOC, 'writeln', {
     surface: 'shadow.document.writeln', group: 'shadow', cls: 'B',
@@ -1120,14 +1120,14 @@
     lastT: at,
     details: 1,
     arg:
-      'обёрнуто ' + installed.length + ' поверхностей' +
-      (failed.length ? '; не удалось ' + failed.length + ': ' + failed.join(', ') : ''),
+      'surfaces:' + installed.length +
+      (failed.length ? ' failed:' + failed.length + ':' + failed.join(',') : ''),
     // Полный список наблюдаемых поверхностей уходит ОДИН раз, вместе с отметкой
     // об установке. Он нужен, чтобы свод мог честно сказать «снято 9 из 14»:
     // без знаменателя это была бы выдумка, а слать его каждым залпом — расточительство.
     surfaces: installed.slice(),
     surfaceGroups: installedGroups.slice(),
-    result: SELF_URL ? 'себя в стеке вычёркиваю' : 'СВОЙ АДРЕС НЕ ОПРЕДЕЛЁН',
+    result: SELF_URL ? 'self:known' : 'self:unknown',
   });
   dirty.add('__installed');
   flush();
