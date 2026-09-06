@@ -41,6 +41,12 @@
   "hint_start_failed": {
     "message": "Could not start: $1"
   },
+  "hint_stopped": {
+    "message": "Recording stopped everywhere. Wrappers already in place in open pages will go away when those pages reload: they cannot be removed from here, they live in the page’s own world."
+  },
+  "hint_stop_failed": {
+    "message": "Could not stop: $1"
+  },
   "hint_erase": {
     "message": "The previous recording holds $1. Reloading the tab erases them — save the report first if you need it. Click again to start over."
   },

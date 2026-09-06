@@ -94,16 +94,47 @@ async function startRecording({ tabId, origin, patterns }) {
   return { ok: true };
 }
 
+// Остановка снимает ВСЕ регистрации прибора, а не только числящиеся за этой
+// вкладкой. Причина в том, как работает registerContentScripts: он регистрирует
+// скрипты по ШАБЛОНУ АДРЕСА, а не по вкладке. Учёт «записываем вкладку N» —
+// это бухгалтерия поверх глобального действия: обёртки встают на каждую
+// подходящую страницу в любой вкладке.
+//
+// Пока остановка снимала только скрипты своей вкладки, она молча не делала
+// ничего, если панель смотрела на другую вкладку: entry не находился, ничего
+// не снималось, — а панель получала on:false и показывала «Записать этот
+// сайт». То есть прибор утверждал, что не наблюдает, продолжая наблюдать.
+// Найдено на живом замере: три подряд серии ушли в «с прибором», потому что
+// «Остановить» ничего не останавливало.
+//
+// Обёртки, уже стоящие в открытых страницах, при этом остаются до следующей
+// загрузки — снять их нельзя, они живут в мире страницы. Об этом сказано
+// вызывающему, чтобы он мог сказать человеку.
 async function stopRecording(tabId) {
   const recording = await getRecording();
-  const entry = recording[tabId];
-  if (entry) {
-    await unregisterIds(entry.scriptIds);
-    delete recording[tabId];
-    await setRecording(recording);
+  const былиВкладки = Object.keys(recording).map(Number);
+
+  let снято = 0;
+  try {
+    const all = await chrome.scripting.getRegisteredContentScripts();
+    const mine = all.filter((s) => s.id.startsWith(SCRIPT_PREFIX)).map((s) => s.id);
+    if (mine.length) {
+      await chrome.scripting.unregisterContentScripts({ ids: mine });
+      снято = mine.length;
+    }
+  } catch (e) {
+    return { ok: false, error: String((e && e.message) || e) };
   }
-  broadcast({ type: 'recording', tabId, on: false });
-  return { ok: true };
+
+  await setRecording({});
+
+  // Сообщаем всем вкладкам, а не только той, с которой нажали: остановка общая.
+  for (const id of былиВкладки) broadcast({ type: 'recording', tabId: id, on: false });
+  if (!былиВкладки.includes(Number(tabId))) {
+    broadcast({ type: 'recording', tabId, on: false });
+  }
+
+  return { ok: true, снятоРегистраций: снято, остановленоВкладок: былиВкладки.length };
 }
 
 async function unregisterIds(ids) {

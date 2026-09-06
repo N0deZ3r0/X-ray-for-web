@@ -898,7 +898,13 @@
 
   $('stop').addEventListener('click', async () => {
     if (!currentTab) return;
-    await ask({ type: 'panel:stop', tabId: currentTab.id });
+    const r = await ask({ type: 'panel:stop', tabId: currentTab.id });
+    // Обёртки, уже стоящие в открытых страницах, живут в мире страницы, и снять
+    // их оттуда нельзя. Молчать об этом нельзя тем более: человек прочитает
+    // «остановлено» и решит, что наблюдения больше нет прямо сейчас.
+    $('hint').textContent = r && r.ok
+      ? t('hint_stopped')
+      : t('hint_stop_failed', (r && r.error) || t('no_answer'));
     прошлаяПодпись = null;
     refresh();
   });

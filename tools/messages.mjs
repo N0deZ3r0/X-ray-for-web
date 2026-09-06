@@ -45,6 +45,11 @@ export const СТРОКИ = {
     'Permission was not granted — there is nothing to record with.',
   ],
   hint_start_failed: ['Не удалось начать: $1', 'Could not start: $1'],
+  hint_stopped: [
+    'Запись остановлена везде. Обёртки, уже стоящие в открытых страницах, исчезнут после их перезагрузки: снять их оттуда нельзя, они живут в мире страницы.',
+    'Recording stopped everywhere. Wrappers already in place in open pages will go away when those pages reload: they cannot be removed from here, they live in the page’s own world.',
+  ],
+  hint_stop_failed: ['Не удалось остановить: $1', 'Could not stop: $1'],
   hint_erase: [
     'В прошлой записи $1. Перезагрузка вкладки их сотрёт — сохраните отчёт, если он нужен. Нажмите ещё раз, чтобы начать заново.',
     'The previous recording holds $1. Reloading the tab erases them — save the report first if you need it. Click again to start over.',
