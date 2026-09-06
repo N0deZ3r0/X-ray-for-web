@@ -161,6 +161,12 @@ The instrument lists what it cannot see and where it can be fooled. In short:
   scheme. That is not the same as "the request did not go out".
 - **Font fingerprinting through `offsetWidth`** is deliberately not covered: a wrapper on a
   property that hot costs more than it is worth.
+- **It costs page load time, and the number is not flattering.** Installing 73 wrappers at
+  `document_start` takes **6.4 ms** before the page runs a line of its own. On the bench —
+  a local page whose LCP is 60 ms — that measured as a **20% LCP regression** (95% CI
+  13–27%), against a 5% target the project set itself. On a real site, where LCP runs into
+  seconds, the same 12 ms is under a percent, but that has not been measured yet. The
+  numbers and the method are in [bench/perf/README.md](bench/perf/README.md).
 
 The full list, with the reasoning for each — [docs/06-limits.md](docs/06-limits.md).
 
