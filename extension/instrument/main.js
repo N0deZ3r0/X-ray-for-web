@@ -220,13 +220,29 @@
     return rec;
   }
 
-  function collapse(meta, at) {
-    const key = meta.surface + '|counted';
+  // Имя поверхности бывает известно только в момент вызова. localStorage и
+  // sessionStorage — ДВА экземпляра одного Storage.prototype: обёртка на
+  // прототипе ловит оба, и различить их можно, лишь сравнив получателя вызова
+  // с window.localStorage. Угадывать нельзя: sessionStorage живёт до закрытия
+  // вкладки, и приписать ему постоянство значит обвинить в персистентности то,
+  // что персистентным не является.
+  function имяПоверхности(meta, приёмник) {
+    if (!meta.поверхностьПо) return meta.surface;
+    try {
+      return meta.поверхностьПо(приёмник) || meta.surface;
+    } catch (e) {
+      return meta.surface;
+    }
+  }
+
+  function collapse(meta, at, имя) {
+    const surface = имя || meta.surface;
+    const key = surface + '|counted';
     let rec = records.get(key);
     if (!rec) {
       rec = newRecord({
         key,
-        surface: meta.surface,
+        surface,
         group: meta.group,
         cls: meta.cls,
         detail: 'counted',
@@ -234,8 +250,10 @@
         lastT: at,
       });
     }
-    meta.countedRec = rec;
-    markDegraded(meta.surface);
+    // Счётчик кэшируется на мете только у поверхностей с постоянным именем.
+    // У динамических он схлопнул бы localStorage и sessionStorage в одну строку.
+    if (!meta.поверхностьПо) meta.countedRec = rec;
+    markDegraded(surface);
     return rec;
   }
 
@@ -254,8 +272,9 @@
     }
   }
 
-  function record(meta, args, out, startedAt) {
+  function record(meta, args, out, startedAt, приёмник) {
     health.callsSeen++;
+    const surface = имяПоверхности(meta, приёмник);
 
     // ── Горячий путь: поверхность схлопнута ────────────────────────────────
     // Ни стека, ни склейки ключа, ни поиска по Map. Время снимаем только пока
@@ -273,7 +292,7 @@
     const at = startedAt === undefined ? selfStart : startedAt;
 
     if (degraded) {
-      const rec = collapse(meta, at);
+      const rec = collapse(meta, at, surface);
       rec.count++;
       rec.lastT = at;
       dirty.add(rec.key);
@@ -283,7 +302,7 @@
 
     if (coldCalls >= BUDGET.maxColdCalls) {
       if (!health.coldBudgetExhausted) health.coldBudgetExhausted = true;
-      const rec = collapse(meta, at);
+      const rec = collapse(meta, at, surface);
       rec.count++;
       rec.lastT = at;
       dirty.add(rec.key);
@@ -294,7 +313,7 @@
     meta.stacks = (meta.stacks || 0) + 1;
     const cap = meta.cls === 'C' ? BUDGET.stacksHotPerSurface : BUDGET.stacksPerSurface;
     if (meta.stacks > cap) {
-      const rec = collapse(meta, at);
+      const rec = collapse(meta, at, surface);
       rec.count++;
       rec.lastT = at;
       dirty.add(rec.key);
@@ -310,8 +329,8 @@
     const argText = meta.arg ? summarize(meta.arg, args) : null;
 
     let key = attr
-      ? meta.surface + '|' + attr.scriptUrl + ':' + attr.line + ':' + attr.column
-      : meta.surface + '|unknown-source';
+      ? surface + '|' + attr.scriptUrl + ':' + attr.line + ':' + attr.column
+      : surface + '|unknown-source';
     if (meta.keyByArg && argText) key += '|' + argText;
 
     let rec = records.get(key);
@@ -323,7 +342,7 @@
       }
       rec = newRecord({
         key,
-        surface: meta.surface,
+        surface,
         group: meta.group,
         cls: meta.cls,
         attribution: attr,
@@ -431,7 +450,7 @@
             throw e;
           } finally {
             try {
-              record(meta, arguments, threw ? undefined : out, undefined);
+              record(meta, arguments, threw ? undefined : out, undefined, this);
             } catch (e) {}
           }
           return out;
@@ -447,7 +466,7 @@
             throw e;
           } finally {
             try {
-              record(meta, arguments, threw ? undefined : out, t);
+              record(meta, arguments, threw ? undefined : out, t, this);
             } catch (e) {}
           }
           return out;
@@ -491,7 +510,7 @@
         const t = hot ? undefined : performance.now();
         const out = origGet.call(this);
         try {
-          record(meta, [], out, t);
+          record(meta, [], out, t, this);
         } catch (e) {}
         return out;
       };
@@ -787,6 +806,13 @@
   // свода считался по чужим группам. Ровно то, о чём предупреждает комментарий
   // в install(). Найдено на снимке fingerprint.com: surfaces начинались с
   // egress.*, а surfaceGroups — с canvas.
+  // Поверхность, которую наблюдает уже поставленная обёртка. Отдельной
+  // установки не требует, но в реестре быть обязана.
+  function отмеченаТакже(имя, группа) {
+    installed.push(имя);
+    installedGroups.push(группа);
+  }
+
   function отмечен(имя) {
     installed.push(имя);
     installedGroups.push('egress');
@@ -1078,15 +1104,37 @@
     },
   });
 
+  // localStorage и sessionStorage — два экземпляра ОДНОГО Storage.prototype.
+  // Обёртка на прототипе ловит оба, и различить их можно только сравнением
+  // получателя вызова. Раньше всё подписывалось «localStorage», и запись в
+  // sessionStorage — которая исчезает с закрытием вкладки — выглядела как
+  // постоянная. Обвинять в персистентности то, что персистентным не является,
+  // прибору нельзя.
+  //
+  // Именно сравнением, а не поиском отличий: спрашиваем получателя, а не
+  // угадываем по косвенным признакам.
   const STORAGE = proto('Storage');
+  const какоеХранилище = (приёмник) => {
+    if (приёмник === W.sessionStorage) return 'sessionStorage';
+    if (приёмник === W.localStorage) return 'localStorage';
+    // Storage бывает и чужой — например у другого окна. Врать про него нечем.
+    return 'storage';
+  };
   install('method', STORAGE, 'setItem', {
     surface: 'localStorage.setItem', group: 'storage', cls: 'B', keyByArg: true,
+    поверхностьПо: (п) => какоеХранилище(п) + '.setItem',
     arg: (a) => String(a[0]).slice(0, 60) + ' | chars:' + String(a[1]).length,
   });
   install('method', STORAGE, 'getItem', {
     surface: 'localStorage.getItem', group: 'storage', cls: 'B', keyByArg: true,
+    поверхностьПо: (п) => какоеХранилище(п) + '.getItem',
     arg: (a) => String(a[0]).slice(0, 60),
   });
+  // Одной обёрткой наблюдаются обе поверхности, и реестр обязан назвать обе:
+  // иначе знаменатель свода и список наблюдаемого умолчат про sessionStorage.
+  отмеченаТакже('sessionStorage.setItem', 'storage');
+  отмеченаТакже('sessionStorage.getItem', 'storage');
+
   install('method', proto('IDBFactory'), 'open', {
     surface: 'indexedDB.open', group: 'storage', cls: 'A', keyByArg: true,
     arg: (a) => String(a[0]).slice(0, 60),
