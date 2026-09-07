@@ -342,17 +342,19 @@ export function applyNetworkEvent(session, net) {
   return 'pending';
 }
 
-export function applyNetworkHeaders(session, requestId, cookieNames) {
+export function applyNetworkHeaders(session, requestId, cookieNames, purpose) {
   for (const e of session.events) {
     if (e.netRequestId === requestId) {
-      e.cookiesSent = cookieNames;
+      if (cookieNames) e.cookiesSent = cookieNames;
+      if (purpose) e.purpose = purpose;
       putSession(session);
       return;
     }
   }
   for (const n of session.pendingNetwork) {
     if (n.requestId === requestId) {
-      n.cookieNames = cookieNames;
+      if (cookieNames) n.cookieNames = cookieNames;
+      if (purpose) n.purpose = purpose;
       putSession(session);
       return;
     }
@@ -382,6 +384,17 @@ function предполётный(net) {
 // запросов законно не проходит через обёрнутые API — картинки, шрифты, стили,
 // навигация, предзагрузка. Помечать их обходом значит врать.
 function beaconLike(net) {
+  // Предзагрузку по подсказке в разметке начинает САМ БРАУЗЕР: JS-вызова нет,
+  // обёрткам видеть нечего, и называть её несовпадением источников — врать.
+  // Chrome помечает такие запросы сам, это измерено на стенде (сценарий S33):
+  //
+  //   <link rel=prefetch>          Sec-Purpose: prefetch
+  //   <link rel=preload as=fetch>  заголовка нет, от fetch неотличим
+  //
+  // Отсюда и объём починки: prefetch убираем из подозрений, preload остаётся
+  // неотличимым и честно назван в пределе 4а.
+  if (net.purpose && /prefetch/i.test(net.purpose)) return false;
+
   if (net.type === 'ping' || net.type === 'websocket') return true;
   if (net.type === 'xmlhttprequest') return true;
   if (net.method && net.method !== 'GET' && net.method !== 'HEAD') return true;

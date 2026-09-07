@@ -97,10 +97,10 @@
     'стенд принял оба обращения': 'the bench received both requests',
     'обёртки не видели ни одного: вызова из JS не было':
       'the wrappers saw neither: there was no call from JS',
-    'сверка обязана НЕ называть их обходом прибора':
-      'reconciliation is obliged NOT to call them an evasion of the instrument',
-    'если названы — смотреть, какой тип приходит от webRequest':
-      'if it does, look at what type webRequest reports',
+    'prefetch НЕ назван несовпадением: Chrome помечает его Sec-Purpose':
+      'prefetch is NOT called a mismatch: Chrome marks it with Sec-Purpose',
+    'preload as=fetch остаётся в подозреваемых: от fetch он неотличим':
+      'preload as=fetch stays under suspicion: it is indistinguishable from a real fetch',
 
     // ── Сценарии: примечания ────────────────────────────────────────────────
     'Классический съём отпечатка кодом с чужого origin.':

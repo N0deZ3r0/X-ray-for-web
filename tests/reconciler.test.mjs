@@ -292,6 +292,72 @@ for (const порядок of ['сеть-первой', 'изнутри-перв�
 // инструмента и в панели, но не переносились. Проверка ниже сверяет то, что
 // панель читает, с тем, что журнал переносит.
 
+// ── Предзагрузка не выдаётся за несовпадение источников ─────────────────────
+//
+// Запрос по <link rel=prefetch> делает САМ БРАУЗЕР, прочитав разметку. JS-вызова
+// нет, обёрткам видеть нечего — и назвать это несовпадением двух источников
+// значит обвинить страницу в том, чего она не делала.
+//
+// Отличить можно: Chrome помечает такие запросы заголовком Sec-Purpose:
+// prefetch. Измерено на стенде, сценарий S33:
+//
+//   <link rel=prefetch>          Sec-Purpose: prefetch
+//   <link rel=preload as=fetch>  заголовка нет, от fetch неотличим
+//
+// Поэтому prefetch выведен из подозрений, а preload честно остаётся в них и
+// назван в пределе 4а.
+
+console.log('предзагрузка');
+{
+  const session = S.blankSession(11, 'https://site.example');
+  const общее = {
+    method: 'GET',
+    type: 'xmlhttprequest',
+    frameId: 0,
+    seenAt: Date.now(),
+    bodyText: null,
+    bodySize: 0,
+    bodyForm: 'none',
+    cookieNames: null,
+  };
+
+  S.applyNetworkEvent(session, { ...общее, requestId: 'p1', url: 'https://site.example/page-data.json' });
+  S.applyNetworkEvent(session, { ...общее, requestId: 'p2', url: 'https://site.example/beacon.json' });
+
+  // Заголовки приходят отдельным событием, как и в браузере.
+  S.applyNetworkHeaders(session, 'p1', null, 'prefetch');
+
+  S.reconcile(session, Date.now() + 5000);
+
+  const по = (u) => session.events.find((e) => e.url && e.url.includes(u));
+  const предзагрузка = по('page-data.json');
+  const обычный = по('beacon.json');
+
+  const проверки = [
+    [
+      'предзагрузка не попала в журнал как несовпадение',
+      !предзагрузка || предзагрузка.match !== 'network-only',
+      предзагрузка && предзагрузка.match,
+    ],
+    [
+      'обычный запрос без пары по-прежнему замечен',
+      Boolean(обычный) && обычный.match === 'network-only',
+      обычный && обычный.match,
+    ],
+    [
+      'предзагрузка посчитана как вне наблюдения, а не потеряна',
+      session.health.unobserved >= 1,
+      session.health,
+    ],
+  ];
+
+  for (const [имя, ок, факт] of проверки) {
+    console.log((ок ? '  ok      ' : '  ПРОВАЛ  ') + имя + (ок ? '' : '  → ' + JSON.stringify(факт)));
+    if (!ок) провал++;
+  }
+  console.log('');
+}
+
 console.log('перенос здоровья');
 {
   const инструментальное = {

@@ -120,6 +120,16 @@ function makeServer(originName, dir) {
         query: url.search,
         body,
         cookie: req.headers.cookie || null,
+        // Заголовки, по которым видно, кто начал запрос. Sec-Purpose Chrome
+        // ставит сам на предзагрузку по подсказке в разметке; JS-запрос его не
+        // несёт. Стенд — независимый свидетель, и это ровно тот случай, когда
+        // его показания решают вопрос, который прибору изнутри не виден.
+        sec: {
+          purpose: req.headers['sec-purpose'] || req.headers.purpose || null,
+          dest: req.headers['sec-fetch-dest'] || null,
+          mode: req.headers['sec-fetch-mode'] || null,
+          site: req.headers['sec-fetch-site'] || null,
+        },
       });
       cors(res, req);
       // Пиксель отвечает картинкой, остальное — 204

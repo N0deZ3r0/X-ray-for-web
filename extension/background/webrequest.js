@@ -111,25 +111,32 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
     if (!details.requestHeaders) return;
 
     let cookieHeader = null;
+    // Кто начал запрос. Chrome помечает предзагрузку по подсказке в разметке
+    // заголовком Sec-Purpose: prefetch — измерено на стенде. Это единственный
+    // способ отличить её от настоящего JS-запроса: тип от webRequest у них
+    // одинаковый. Без этого предзагрузка Gatsby попадала в «сеть видела,
+    // обёртки — нет» и выглядела обходом (предел 4а).
+    let purpose = null;
     for (const h of details.requestHeaders) {
-      if (h.name && h.name.toLowerCase() === 'cookie') {
-        cookieHeader = h.value || '';
-        break;
-      }
+      const имя = h.name && h.name.toLowerCase();
+      if (имя === 'cookie') cookieHeader = h.value || '';
+      else if (имя === 'sec-purpose' || имя === 'purpose') purpose = h.value || null;
     }
-    if (!cookieHeader) return;
+    if (!cookieHeader && !purpose) return;
 
     const names = cookieHeader
-      .split(';')
-      .map((c) => c.split('=')[0].trim())
-      .filter(Boolean);
+      ? cookieHeader
+          .split(';')
+          .map((c) => c.split('=')[0].trim())
+          .filter(Boolean)
+      : null;
 
     (async () => {
       const recording = await recordingTabs();
       if (!recording[tabId]) return;
       const session = await getSession(tabId);
       if (!session) return;
-      applyNetworkHeaders(session, details.requestId, names);
+      applyNetworkHeaders(session, details.requestId, names, purpose);
       await flushNow();
     })();
   },
