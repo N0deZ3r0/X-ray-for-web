@@ -44,6 +44,11 @@ function blankHealth() {
     // Транспорты, которые сетевой источник не наблюдает вовсе.
     // Считаются отдельно: сказать про них «в сеть не ушло» было бы ложью.
     noNetworkSource: 0,
+    // Обёрнуто, но перекрыто на экземпляре: обёртка стоит, вызовы идут мимо.
+    surfacesShadowed: [],
+    // Цена установки прибора в миллисекундах. Своё число показываем тем же
+    // способом, каким показываем чужие.
+    installMs: null,
   };
 }
 
@@ -252,6 +257,11 @@ export function applyRecords(session, sender, records, instrumentHealth, bridge)
     session.health.callsPerSecond = instrumentHealth.callsPerSecond;
     session.health.surfacesInstalled = instrumentHealth.surfacesInstalled;
     session.health.surfacesFailed = instrumentHealth.surfacesFailed || [];
+    // Перекрытые на экземпляре обёртки и цена установки. Без переноса сюда
+    // панель показывала бы прочерк, а знаменатель свода считал бы наблюдаемым
+    // то, что не наблюдается: инструмент это знает, а журнал — нет.
+    session.health.surfacesShadowed = instrumentHealth.surfacesShadowed || [];
+    if (instrumentHealth.installMs != null) session.health.installMs = instrumentHealth.installMs;
     session.health.egressDropped = instrumentHealth.egressDropped || 0;
     session.health.coldBudgetExhausted =
       session.health.coldBudgetExhausted || Boolean(instrumentHealth.coldBudgetExhausted);

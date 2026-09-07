@@ -12,7 +12,7 @@
 // Проверяется тестом наизнанку: в золотую сессию кладутся заведомые секреты, и
 // тест ищет их в готовом экспорте. Найдено — провал.
 
-import { t, n as скл, текст } from './i18n.js';
+import { t, n as скл, текст, подробность } from './i18n.js';
 
 const МЕТКА = t('redacted');
 
@@ -305,8 +305,8 @@ export function собратьОтчёт(session, свод, { редакция =
         (e.detail === 'counted' ? t('report_counted') : '')
     );
     L.push('      ' + кто);
-    if (e.arg) L.push(t('report_arg') + e.arg);
-    if (e.result) L.push(t('report_result') + e.result);
+    if (e.arg) L.push(t('report_arg') + подробность(e.arg));
+    if (e.result) L.push(t('report_result') + подробность(e.result));
   }
   L.push('');
 

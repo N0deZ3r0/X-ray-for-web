@@ -119,13 +119,15 @@
   function подробность(код) {
     const v = String(код == null ? '' : код);
     let m;
-    if ((m = /^chars:(d+)$/.exec(v))) return t('det_chars', m[1]);
-    if ((m = /^n:(d+)$/.exec(v))) return t('det_items', m[1]);
-    if ((m = /^rect:(d+)x(d+)@(-?d+),(-?d+)$/.exec(v))) return t('det_rect', m[1], m[2], m[3], m[4]);
-    if ((m = /^audio:([d.]+),([d.]+)$/.exec(v))) return t('det_audio', m[1], m[2]);
-    if ((m = /^cookies:(d+)$/.exec(v))) return t('det_cookies', m[1]);
-    if ((m = /^html:(d+)$/.exec(v))) return t('det_html', m[1]);
-    if ((m = /^surfaces:(d+)(?: failed:(d+):(.*))?$/.exec(v))) {
+    if ((m = /^chars:(\d+)$/.exec(v))) return t('det_chars', m[1]);
+    if ((m = /^n:(\d+)$/.exec(v))) return t('det_items', m[1]);
+    if ((m = /^rect:(\d+)x(\d+)@(-?\d+),(-?\d+)$/.exec(v))) {
+      return t('det_rect', m[1], m[2], m[3], m[4]);
+    }
+    if ((m = /^audio:([\d.]+),([\d.]+)$/.exec(v))) return t('det_audio', m[1], m[2]);
+    if ((m = /^cookies:(\d+)$/.exec(v))) return t('det_cookies', m[1]);
+    if ((m = /^html:(\d+)$/.exec(v))) return t('det_html', m[1]);
+    if ((m = /^surfaces:(\d+)(?: failed:(\d+):(.*))?$/.exec(v))) {
       const голова = t('det_surfaces', m[1]);
       return m[2] ? голова + '; ' + t('det_failed', m[2], m[3]) : голова;
     }
@@ -133,12 +135,20 @@
     if (v === 'no') return t('det_no');
     if (v === 'self:known') return t('det_self_known');
     if (v === 'self:unknown') return t('det_self_unknown');
-    // Куки: «имя | days:730» или «имя | until:...»; ключ localStorage: «имя | chars:12»
-    if ((m = /^(.*) | days:(d+)$/.exec(v))) return m[1] + ', ' + t('det_days', m[2]);
-    if ((m = /^(.*) | until:(.*)$/.exec(v))) return m[1] + ', ' + t('det_until', m[2]);
-    if ((m = /^(.*) | chars:(d+)$/.exec(v))) return m[1] + ' (' + t('det_chars', m[2]) + ')';
+    // Куки: «имя | days:730» или «имя | until:...»; ключ localStorage: «имя | chars:12».
+    // Разделитель именно « | » целиком: без экранирования «\|» превращается в
+    // альтернативу, и тогда ЛЮБАЯ строка с пробелом обрезается по последнему
+    // пробелу и получает хвост про дни. Так и случилось на живом сайте: «Google
+    // Inc.» показывалось как «Google, живёт undefined дн.».
+    if ((m = /^(.*) \| days:(\d+)$/.exec(v))) return m[1] + ', ' + t('det_days', m[2]);
+    if ((m = /^(.*) \| until:(.*)$/.exec(v))) return m[1] + ', ' + t('det_until', m[2]);
+    if ((m = /^(.*) \| chars:(\d+)$/.exec(v))) return m[1] + ' (' + t('det_chars', m[2]) + ')';
     return v;
   }
+
+  // Наружу — только для набора проверок: расшифровка кодов это единственное
+  // место панели, где ошибка не видна глазом на пустых данных.
+  self.__подробность = подробность;
 
   // Фрейм тоже хранится кодом: 'main', 'about', 'frame'.
   function имяФрейма(первое, frameId) {

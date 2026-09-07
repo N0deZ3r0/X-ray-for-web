@@ -12,6 +12,7 @@
 //
 // Запуск: node tests/reconciler.test.mjs
 
+import { readFileSync } from 'node:fs';
 import { загрузить } from './lib/zagruzka.mjs';
 
 // ── Заглушка chrome для модуля журнала ──────────────────────────────────────
@@ -273,6 +274,68 @@ for (const порядок of ['сеть-первой', 'изнутри-перв�
   проверки.push(['повторная сверка изменений не нашла', второй === false, второй]);
 
   console.log('номер правки');
+  for (const [имя, ок, факт] of проверки) {
+    console.log((ок ? '  ok      ' : '  ПРОВАЛ  ') + имя + (ок ? '' : '  → ' + JSON.stringify(факт)));
+    if (!ок) провал++;
+  }
+  console.log('');
+}
+
+// ── Здоровье доезжает из инструмента в журнал ───────────────────────────────
+//
+// Инструмент считает своё здоровье в мире страницы, журнал складывает его в
+// сеанс, панель показывает. Звено посередине легко забыть: поле добавили в
+// инструмент и в панель, а перенос не написали — и человек видит прочерк там,
+// где прибор всё знает.
+//
+// Так и случилось дважды подряд: installMs и surfacesShadowed были у
+// инструмента и в панели, но не переносились. Проверка ниже сверяет то, что
+// панель читает, с тем, что журнал переносит.
+
+console.log('перенос здоровья');
+{
+  const инструментальное = {
+    callsSeen: 415,
+    coldCalls: 415,
+    coldMs: 16.5,
+    hotCalls: 0,
+    callsPerSecond: 1,
+    recordsDropped: 0,
+    degradedSurfaces: [],
+    killSwitchTripped: false,
+    coldBudgetExhausted: false,
+    egressDropped: 0,
+    surfacesInstalled: 73,
+    surfacesFailed: [],
+    surfacesShadowed: ['navigator.platform'],
+    installMs: 4.9,
+  };
+
+  const session = S.blankSession(7, 'https://site.example');
+  S.applyRecords(session, sender, [], инструментальное, { sent: 3, gaps: 0 });
+  const h = session.health;
+
+  const проверки = [
+    ['цена установки доехала', h.installMs === 4.9, h.installMs],
+    [
+      'перекрытые обёртки доехали',
+      Array.isArray(h.surfacesShadowed) && h.surfacesShadowed[0] === 'navigator.platform',
+      h.surfacesShadowed,
+    ],
+    ['счётчики вызовов доехали', h.callsSeen === 415 && h.coldMs === 16.5, [h.callsSeen, h.coldMs]],
+    ['число обёрнутых доехало', h.surfacesInstalled === 73, h.surfacesInstalled],
+  ];
+
+  // И общее правило: каждое поле, которое панель читает из здоровья, обязано
+  // либо считаться в журнале, либо переноситься из инструмента. Список берётся
+  // из самой панели, чтобы не разъехаться с ней.
+  const панель = readFileSync(new URL('../extension/ui/panel.js', import.meta.url), 'utf8');
+  const начало = панель.indexOf('const rows = [');
+  const конец = панель.indexOf('];', начало);
+  const читаемые = [...панель.slice(начало, конец).matchAll(/h\.([a-zA-Z]+)/g)].map((m) => m[1]);
+  const нетВЖурнале = [...new Set(читаемые)].filter((k) => !(k in h));
+  проверки.push(['все поля здоровья из панели есть в журнале', нетВЖурнале.length === 0, нетВЖурнале]);
+
   for (const [имя, ок, факт] of проверки) {
     console.log((ок ? '  ok      ' : '  ПРОВАЛ  ') + имя + (ок ? '' : '  → ' + JSON.stringify(факт)));
     if (!ок) провал++;

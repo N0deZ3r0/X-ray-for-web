@@ -62,12 +62,12 @@ const session = {
     surface('0|d', 'canvas.toDataURL', 'canvas', { result: '8090 символов' }),
     surface('0|e', 'fonts.check', 'fonts', { count: 41 }),
     surface('0|f', 'webrtc.RTCPeerConnection', 'hardware'),
-    surface('0|g', 'cookie.write', 'storage', { arg: '_ga, живёт 730 дн.' }),
+    surface('0|g', 'cookie.write', 'storage', { arg: '_ga | days:730' }),
     surface('0|h', 'shadow.Worker', 'shadow', { arg: '/worker.js' }),
     surface('0|k', 'screen.width', 'device', { result: '2008' }),
     surface('0|i', 'screen.height', 'device', { result: '1255' }),
     // Стирание куки: выглядит как постановка, но дата в прошлом
-    surface('0|j', 'cookie.write', 'storage', { arg: '_old, до Thu, 01 Jan 1970 00:00:00 GMT' }),
+    surface('0|j', 'cookie.write', 'storage', { arg: '_old | until:Thu, 01 Jan 1970 00:00:00 GMT' }),
     // Вызовы ЧУЖОГО расширения. Приписать их сайту — ложное обвинение.
     surface('0|ext1', 'localStorage.setItem', 'storage', {
       arg: 'v.ui.f (3 симв.)',
@@ -276,6 +276,20 @@ function обходБезВиновника(f) {
   'стирание куки не выдано за постановку идентификатора',
   найти('cookie-id') && !найти('cookie-id').evidence.includes('0|j'),
   найти('cookie-id')
+);
+// Разбирается КОД инструмента, а не слова показа. На fingerprint.com проба
+// возможностей `cookietest`, поставленная и тут же стёртая датой 1970 года,
+// попала в свод как «долгоживущий идентификатор»: детектор искал русское
+// «, до <дата>», которого в журнале давно нет.
+проверить(
+  'стирание распознаётся по коду until:, а не по словам',
+  найти('cookie-id') && найти('cookie-id').evidence.includes('0|g'),
+  найти('cookie-id')
+);
+проверить(
+  'значение факта показано словами, а не кодом',
+  найти('cookie-id') && /живёт 730 дн\./.test(найти('cookie-id').value || ''),
+  найти('cookie-id') && найти('cookie-id').value
 );
 
 // ── Счётчик снятого вместо битов энтропии ───────────────────────────────────

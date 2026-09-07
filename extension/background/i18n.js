@@ -56,3 +56,41 @@ export function текст(значение) {
 }
 
 export const язык = ЯЗЫК;
+
+// Подробность вызова: инструмент живёт в мире страницы, где chrome.i18n нет,
+// поэтому пишет коды — «chars:4820», «rect:200x100@0,0», «yes». Слова
+// подставляются здесь. Незнакомый код показывается как есть: придумывать ему
+// расшифровку нельзя, а потерять её ещё хуже.
+//
+// Живёт рядом с переводом, а не в панели, потому что коды доходят не только до
+// панели: свод и отчёт показывают те же значения, и до этой правки человек
+// видел в фактах «n:4» вместо «4 шт.».
+function подробностьС(t, код) {
+  const v = String(код == null ? '' : код);
+  let m;
+  if ((m = /^chars:(\d+)$/.exec(v))) return t('det_chars', m[1]);
+  if ((m = /^n:(\d+)$/.exec(v))) return t('det_items', m[1]);
+  if ((m = /^rect:(\d+)x(\d+)@(-?\d+),(-?\d+)$/.exec(v))) {
+    return t('det_rect', m[1], m[2], m[3], m[4]);
+  }
+  if ((m = /^audio:([\d.]+),([\d.]+)$/.exec(v))) return t('det_audio', m[1], m[2]);
+  if ((m = /^cookies:(\d+)$/.exec(v))) return t('det_cookies', m[1]);
+  if ((m = /^html:(\d+)$/.exec(v))) return t('det_html', m[1]);
+  if ((m = /^surfaces:(\d+)(?: failed:(\d+):(.*))?$/.exec(v))) {
+    const голова = t('det_surfaces', m[1]);
+    return m[2] ? голова + '; ' + t('det_failed', m[2], m[3]) : голова;
+  }
+  if (v === 'yes') return t('det_yes');
+  if (v === 'no') return t('det_no');
+  if (v === 'self:known') return t('det_self_known');
+  if (v === 'self:unknown') return t('det_self_unknown');
+  // Разделитель именно « | » целиком: без экранирования он становится
+  // альтернативой, и тогда любая строка с пробелом обрезается по последнему
+  // пробелу и обрастает хвостом про дни. Так и было на живом сайте.
+  if ((m = /^(.*) \| days:(\d+)$/.exec(v))) return m[1] + ', ' + t('det_days', m[2]);
+  if ((m = /^(.*) \| until:(.*)$/.exec(v))) return m[1] + ', ' + t('det_until', m[2]);
+  if ((m = /^(.*) \| chars:(\d+)$/.exec(v))) return m[1] + ' (' + t('det_chars', m[2]) + ')';
+  return v;
+}
+
+export const подробность = (код) => подробностьС(t, код);
