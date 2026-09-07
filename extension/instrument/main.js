@@ -781,6 +781,17 @@
     return rec;
   }
 
+  // Обёртки исходящего отмечаются ТОЙ ЖЕ парой списков, что и поверхности.
+  // Шесть из них когда-то писали только в installed, и списки разъезжались на
+  // шесть позиций: каждая поверхность получала группу соседа, а знаменатель
+  // свода считался по чужим группам. Ровно то, о чём предупреждает комментарий
+  // в install(). Найдено на снимке fingerprint.com: surfaces начинались с
+  // egress.*, а surfaceGroups — с canvas.
+  function отмечен(имя) {
+    installed.push(имя);
+    installedGroups.push('egress');
+  }
+
   (function installEgress() {
     // sendBeacon — основной транспорт аналитики
     const navProto = W.Navigator && W.Navigator.prototype;
@@ -798,7 +809,7 @@
       } catch (e) {}
       ORIGINALS.set(wrapper, orig);
       navProto.sendBeacon = wrapper;
-      installed.push('egress.beacon');
+      отмечен('egress.beacon');
     }
 
     // fetch
@@ -827,7 +838,7 @@
       } catch (e) {}
       ORIGINALS.set(wrapper, orig);
       W.fetch = wrapper;
-      installed.push('egress.fetch');
+      отмечен('egress.fetch');
     }
 
     // XHR: адрес известен в open, тело — в send
@@ -858,7 +869,7 @@
       ORIGINALS.set(sendWrap, origSend);
       xhrProto.open = openWrap;
       xhrProto.send = sendWrap;
-      installed.push('egress.xhr');
+      отмечен('egress.xhr');
     }
 
     // Пиксель через Image.src
@@ -881,7 +892,7 @@
             enumerable: d.enumerable,
             configurable: true,
           });
-          installed.push('egress.image');
+          отмечен('egress.image');
         } catch (e) {}
       }
     }
@@ -907,7 +918,7 @@
       ORIGINALS.set(proxy, Original);
       try {
         W[name] = proxy;
-        installed.push('egress.' + transport);
+        отмечен('egress.' + transport);
       } catch (e) {}
     }
   })();

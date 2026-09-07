@@ -151,7 +151,10 @@ export const СТРОКИ = {
     '. Сверху обходы, затем запросы с телом, затем остальное.',
     '. Evasions first, then requests with a body, then the rest.',
   ],
-  verdict_network_only: ['прошло мимо прибора', 'went past the instrument'],
+  // «Прошло мимо прибора» звучало как обвинение в обходе. Так выглядит и
+  // обход, и предзагрузка, которую начинает сам браузер, и запрос из воркера.
+  // Прибор различить их не может, значит и утверждать не должен.
+  verdict_network_only: ['сеть видела, обёртки — нет', 'network saw it, wrappers did not'],
   verdict_confirmed: ['подтверждено сетью', 'confirmed by network'],
   verdict_hook_only: ['в сеть не ушло', 'never reached the network'],
   verdict_no_network_source: ['сетью не проверяется', 'not checkable against the network'],
@@ -367,12 +370,12 @@ export const СТРОКИ = {
     'Whether the extension acts on its own or at the page’s request is something the instrument cannot tell. These calls are not counted against the site.',
   ],
   fact_evasion: [
-    'Часть запросов прошла мимо инструментации',
-    'Some requests went past the instrumentation',
+    'Сеть видела запросы, которых не видели обёртки',
+    'The network saw requests the wrappers did not',
   ],
   fact_evasion_note: [
-    'Прибор не может сказать, кто их отправил, — только что они были',
-    'The instrument cannot say who sent them — only that they happened',
+    'Так выглядит и обход прибора, и предзагрузка, которую начинает сам браузер по подсказке в разметке, и запрос из воркера. Прибор не может сказать, кто их отправил и почему, — только что они были',
+    'This is what an evasion looks like, and also a preload the browser starts on its own from a hint in the markup, and a request from a worker. The instrument cannot say who sent them or why — only that they happened',
   ],
   fact_unattributed: [
     'Ещё $1 к источнику привязать не удалось',

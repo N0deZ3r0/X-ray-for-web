@@ -159,3 +159,24 @@
     return { cookies: 2, localStorage: 1, indexedDB: Boolean(req) };
   };
 })();
+
+// Подсказки предзагрузки: запрос делает САМ БРАУЗЕР, прочитав разметку.
+// Никакого JS-вызова нет, значит обёрткам видеть нечего. Сценарий нужен, чтобы
+// проверить: не назовёт ли прибор такое обходом. На fingerprint.com именно так
+// и вышло — два запроса Gatsby попали в «прошло мимо прибора».
+(function () {
+  const B = (window.__bench = window.__bench || {});
+  B.resourceHints = function resourceHints() {
+    const A = 'http://localhost:8080';
+    const сделать = (rel, extra) => {
+      const l = document.createElement('link');
+      l.rel = rel;
+      Object.assign(l, extra);
+      document.head.appendChild(l);
+      return l.href;
+    };
+    const один = сделать('prefetch', { href: A + '/collect?hint=prefetch' });
+    const два = сделать('preload', { href: A + '/collect?hint=preload', as: 'fetch', crossOrigin: 'anonymous' });
+    return { prefetch: один, preload: два, вызововИзJS: 0 };
+  };
+})();

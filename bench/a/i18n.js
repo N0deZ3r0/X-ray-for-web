@@ -91,6 +91,16 @@
       'Clean prototype: canvas through a freshly created frame',
     'Страница ищет прибор': 'The page looks for the instrument',
     'Переходы SPA через history.pushState': 'SPA navigation through history.pushState',
+    'Предзагрузка по подсказке в разметке': 'Preload from a hint in the markup',
+    'Запрос начинает САМ БРАУЗЕР, прочитав <link rel=prefetch> и <link rel=preload as=fetch>. Никакой JS его не делает, значит обёрткам видеть нечего — и это не обход, а обычная работа страницы.':
+      'The request is started by THE BROWSER ITSELF, having read <link rel=prefetch> and <link rel=preload as=fetch>. No JS makes it, so there is nothing for the wrappers to see — and this is not an evasion but a page going about its business.',
+    'стенд принял оба обращения': 'the bench received both requests',
+    'обёртки не видели ни одного: вызова из JS не было':
+      'the wrappers saw neither: there was no call from JS',
+    'сверка обязана НЕ называть их обходом прибора':
+      'reconciliation is obliged NOT to call them an evasion of the instrument',
+    'если названы — смотреть, какой тип приходит от webRequest':
+      'if it does, look at what type webRequest reports',
 
     // ── Сценарии: примечания ────────────────────────────────────────────────
     'Классический съём отпечатка кодом с чужого origin.':

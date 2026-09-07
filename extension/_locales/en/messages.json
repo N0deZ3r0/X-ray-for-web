@@ -180,7 +180,7 @@
     "message": ". Evasions first, then requests with a body, then the rest."
   },
   "verdict_network_only": {
-    "message": "went past the instrument"
+    "message": "network saw it, wrappers did not"
   },
   "verdict_confirmed": {
     "message": "confirmed by network"
@@ -489,10 +489,10 @@
     "message": "Whether the extension acts on its own or at the page’s request is something the instrument cannot tell. These calls are not counted against the site."
   },
   "fact_evasion": {
-    "message": "Some requests went past the instrumentation"
+    "message": "The network saw requests the wrappers did not"
   },
   "fact_evasion_note": {
-    "message": "The instrument cannot say who sent them — only that they happened"
+    "message": "This is what an evasion looks like, and also a preload the browser starts on its own from a hint in the markup, and a request from a worker. The instrument cannot say who sent them or why — only that they happened"
   },
   "fact_unattributed": {
     "message": "A further $1 could not be attributed to a source"
