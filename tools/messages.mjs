@@ -271,6 +271,10 @@ export const СТРОКИ = {
     'Разбор формата есть для GA4, Meta Pixel, Метрики и Вебвизора. Для остальных адресов подпись «формат не опознан» — это не «полей нет».',
     'Format parsing exists for GA4, Meta Pixel, Metrica and Webvisor. For other addresses the label “format not identified” does not mean “no fields”.',
   ],
+  limit_in_stacks: [
+    '<b>Прибор виден в чужих стеках.</b> Ошибки и предупреждения браузера могут указывать на <code>instrument/main.js</code>: обёртка стоит в цепочке вызова, поэтому её кадр попадает в трассировку. Наличие прибора в стеке не делает его причиной — прежде чем винить его, воспроизведите без него.',
+    '<b>The instrument shows up in other people’s stacks.</b> Browser errors and warnings may point at <code>instrument/main.js</code>: the wrapper sits in the call chain, so its frame lands in the trace. Being in the stack does not make it the cause — before blaming it, reproduce without it.',
+  ],
   limit_unknown_source: [
     'Не удалось разобрать стек — пишем «источник не определён», а не подставляем страницу.',
     'When a stack cannot be parsed we write “source not determined” rather than putting the page there.',
