@@ -102,8 +102,8 @@ export const СТРОКИ = {
   health_calls_per_sec: ['Вызовов в секунду', 'Calls per second'],
   health_install_ms: ['Установка прибора, мс', 'Instrument setup, ms'],
   health_reconcile: [
-    'Сверка источников: <b>$1</b> подтверждено обоими, <b class="mimo">$2</b> прошло мимо инструментации, <b>$3</b> не дошло до сети, <b>$4</b> нечем проверить (WebSocket), <b>$5</b> вне наблюдения — стили, скрипты, шрифты, картинки. Они посчитаны, но не показаны: обвинять их не в чем, а списком они утопили бы маячки.',
-    'Source reconciliation: <b>$1</b> confirmed by both, <b class="mimo">$2</b> went past the instrumentation, <b>$3</b> never reached the network, <b>$4</b> cannot be checked (WebSocket), <b>$5</b> outside observation — styles, scripts, fonts, images. They are counted but not listed: there is nothing to accuse them of, and as a list they would drown the beacons.',
+    'Сверка источников: <b>$1</b> подтверждено обоими, <b class="mimo">$2</b> видела только сеть, <b>$3</b> не дошло до сети, <b>$4</b> нечем проверить (WebSocket), <b>$5</b> вне наблюдения — стили, скрипты, шрифты, картинки. Они посчитаны, но не показаны: обвинять их не в чем, а списком они утопили бы маячки.',
+    'Source reconciliation: <b>$1</b> confirmed by both, <b class="mimo">$2</b> seen by the network only, <b>$3</b> never reached the network, <b>$4</b> cannot be checked (WebSocket), <b>$5</b> outside observation — styles, scripts, fonts, images. They are counted but not listed: there is nothing to accuse them of, and as a list they would drown the beacons.',
   ],
   health_time_note: [
     'Время показано только для вызовов со снятием стека — их можно замерить. Вызовы-счётчики стоят меньше, чем сам замер, поэтому их время не показано.',
@@ -148,8 +148,8 @@ export const СТРОКИ = {
   // ── Исходящее ─────────────────────────────────────────────────────────────
   egress_empty: ['Исходящего не было.', 'Nothing went out.'],
   egress_order_note: [
-    '. Сверху обходы, затем запросы с телом, затем остальное.',
-    '. Evasions first, then requests with a body, then the rest.',
+    '. Сверху те, которых не видели обёртки, затем запросы с телом, затем остальное.',
+    '. First the ones the wrappers did not see, then requests with a body, then the rest.',
   ],
   // «Прошло мимо прибора» звучало как обвинение в обходе. Так выглядит и
   // обход, и предзагрузка, которую начинает сам браузер, и запрос из воркера.
@@ -487,8 +487,8 @@ export const СТРОКИ = {
     '  Calls intercepted: $1, with stack capture: $2',
   ],
   report_health_reconcile: [
-    '  Сверка: $1 подтверждено, $2 мимо прибора, $3 не дошло до сети, $4 нечем проверить',
-    '  Reconciliation: $1 confirmed, $2 past the instrument, $3 never reached the network, $4 not checkable',
+    '  Сверка: $1 подтверждено, $2 видела только сеть, $3 не дошло до сети, $4 нечем проверить',
+    '  Reconciliation: $1 confirmed, $2 network-only, $3 never reached the network, $4 not checkable',
   ],
   report_warn_killswitch: [
     '  ВНИМАНИЕ: прибор снижал детализацию под нагрузкой.',

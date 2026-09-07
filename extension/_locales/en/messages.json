@@ -132,7 +132,7 @@
     "message": "Instrument setup, ms"
   },
   "health_reconcile": {
-    "message": "Source reconciliation: <b>$1</b> confirmed by both, <b class=\"mimo\">$2</b> went past the instrumentation, <b>$3</b> never reached the network, <b>$4</b> cannot be checked (WebSocket), <b>$5</b> outside observation — styles, scripts, fonts, images. They are counted but not listed: there is nothing to accuse them of, and as a list they would drown the beacons."
+    "message": "Source reconciliation: <b>$1</b> confirmed by both, <b class=\"mimo\">$2</b> seen by the network only, <b>$3</b> never reached the network, <b>$4</b> cannot be checked (WebSocket), <b>$5</b> outside observation — styles, scripts, fonts, images. They are counted but not listed: there is nothing to accuse them of, and as a list they would drown the beacons."
   },
   "health_time_note": {
     "message": "Time is shown only for calls with a stack capture — those can be measured. Counted calls cost less than the measurement itself, so their time is not shown."
@@ -177,7 +177,7 @@
     "message": "Nothing went out."
   },
   "egress_order_note": {
-    "message": ". Evasions first, then requests with a body, then the rest."
+    "message": ". First the ones the wrappers did not see, then requests with a body, then the rest."
   },
   "verdict_network_only": {
     "message": "network saw it, wrappers did not"
@@ -639,7 +639,7 @@
     "message": "  Calls intercepted: $1, with stack capture: $2"
   },
   "report_health_reconcile": {
-    "message": "  Reconciliation: $1 confirmed, $2 past the instrument, $3 never reached the network, $4 not checkable"
+    "message": "  Reconciliation: $1 confirmed, $2 network-only, $3 never reached the network, $4 not checkable"
   },
   "report_warn_killswitch": {
     "message": "  WARNING: the instrument reduced detail under load."

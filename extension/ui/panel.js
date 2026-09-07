@@ -428,10 +428,14 @@
     const c = свод.coverage;
     const cov = document.createElement('div');
     cov.className = 'coverage';
-    cov.innerHTML =
-      t('coverage', c.снято, c.наблюдается == null ? '?' : c.наблюдается) +
-      '<span class="why"></span>';
-    cov.querySelector('.why').textContent = t('coverage_why');
+    // Примечание — отдельный узел, а не спан внутри той же строки. Через
+    // спан оно слипалось с предыдущим предложением: «…39 из 53.Битов энтропии».
+    // Разделение структурой, а не стилем: стиль можно потерять, структуру нет.
+    cov.innerHTML = t('coverage', c.снято, c.наблюдается == null ? '?' : c.наблюдается);
+    const почему = document.createElement('p');
+    почему.className = 'why';
+    почему.textContent = t('coverage_why');
+    cov.appendChild(почему);
     box.appendChild(cov);
   }
 

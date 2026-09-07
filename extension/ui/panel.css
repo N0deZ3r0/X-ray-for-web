@@ -193,7 +193,7 @@ footer { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 10px;
   border: 1px dashed var(--line); font-size: 12px; color: var(--dim);
 }
 .coverage b { color: var(--fg); font-family: var(--mono); }
-.coverage .why { display: block; margin-top: 4px; font-size: 11px; }
+.coverage .why { display: block; margin: 4px 0 0; font-size: 11px; }
 
 .check.danger { color: var(--warn); }
 
