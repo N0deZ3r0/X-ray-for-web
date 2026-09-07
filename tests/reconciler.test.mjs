@@ -323,9 +323,13 @@ console.log('предзагрузка');
 
   S.applyNetworkEvent(session, { ...общее, requestId: 'p1', url: 'https://site.example/page-data.json' });
   S.applyNetworkEvent(session, { ...общее, requestId: 'p2', url: 'https://site.example/beacon.json' });
+  S.applyNetworkEvent(session, { ...общее, requestId: 'p3', url: 'https://site.example/other.json' });
 
   // Заголовки приходят отдельным событием, как и в браузере.
   S.applyNetworkHeaders(session, 'p1', null, 'prefetch');
+  // Намерение, которого прибор не знает. Из подозрений оно НЕ выводит — но
+  // доехать до человека обязано: пусть решает он, а не молчание прибора.
+  S.applyNetworkHeaders(session, 'p3', null, 'какое-то-иное');
 
   S.reconcile(session, Date.now() + 5000);
 
@@ -348,6 +352,31 @@ console.log('предзагрузка');
       'предзагрузка посчитана как вне наблюдения, а не потеряна',
       session.health.unobserved >= 1,
       session.health,
+    ],
+    // Заголовок Sec-Purpose был измерен НА ПРОВОДЕ — на стенде, со стороны
+    // сервера. Что его видит webRequest в браузере, из этого не следует, и
+    // проверить это можно только на живом замере. Поэтому прибор считает такие
+    // пометки и показывает число: ноль на странице с предзагрузкой означает,
+    // что исключение не работает, и молчать об этом нельзя.
+    [
+      'пометки браузера сосчитаны — иначе нечем узнать, доходят ли они',
+      session.health.purposeSeen === 2,
+      session.health.purposeSeen,
+    ],
+    [
+      'запрос без пометки её и не получает',
+      обычный && обычный.purpose == null,
+      обычный && обычный.purpose,
+    ],
+    [
+      'незнакомое намерение не выводит из подозрений',
+      по('other.json') && по('other.json').match === 'network-only',
+      по('other.json') && по('other.json').match,
+    ],
+    [
+      'но доезжает до записи — человеку видно, чем это объясняется',
+      по('other.json') && по('other.json').purpose === 'какое-то-иное',
+      по('other.json') && по('other.json').purpose,
     ],
   ];
 

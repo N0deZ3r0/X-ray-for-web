@@ -212,6 +212,9 @@
       // делает установка, а не вызовы, — значит это число человек должен
       // видеть так же, как видит чужие.
       [null, t('health_install_ms'), h.installMs != null ? h.installMs : '—'],
+      // Видит ли расширение метку намерения от браузера. От этого зависит,
+      // работает ли исключение предзагрузки из «сеть видела, обёртки — нет».
+      [null, t('health_purpose_seen'), h.purposeSeen != null ? h.purposeSeen : '—'],
     ];
 
     el.textContent = '';
@@ -540,6 +543,10 @@
         // Источник не определён и выдумывать его нельзя
         meta.push(t('source_network_only'));
       }
+      // Запрос, который начал сам браузер, помечен им же. Показываем метку
+      // как есть: это единственное место, где видно, что «обёртки не видели»
+      // объясняется не обходом, а тем, что JS-вызова и не было.
+      if (e.purpose) meta.push(t('started_by_browser', e.purpose));
       if (e.cookiesSent && e.cookiesSent.length) {
         meta.push(t('cookies_sent', e.cookiesSent.join(', ')));
       }

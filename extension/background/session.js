@@ -49,6 +49,10 @@ function blankHealth() {
     // Цена установки прибора в миллисекундах. Своё число показываем тем же
     // способом, каким показываем чужие.
     installMs: null,
+    // Сколько запросов браузер пометил своим намерением (Sec-Purpose).
+    // Ноль на странице с предзагрузкой означает, что заголовок до webRequest
+    // не доходит, и тогда исключение предзагрузки из подозрений не работает.
+    purposeSeen: 0,
   };
 }
 
@@ -343,6 +347,13 @@ export function applyNetworkEvent(session, net) {
 }
 
 export function applyNetworkHeaders(session, requestId, cookieNames, purpose) {
+  // Считаем ДО поиска пары: число отвечает на вопрос «доходит ли Sec-Purpose
+  // до расширения вообще», а не «нашлась ли запись». Заголовок был измерен на
+  // проводе — на стенде, со стороны сервера. Что его видит webRequest, из
+  // этого не следует, и пока прибор не показал число, я этого не знаю.
+  if (purpose && session.health) {
+    session.health.purposeSeen = (session.health.purposeSeen || 0) + 1;
+  }
   for (const e of session.events) {
     if (e.netRequestId === requestId) {
       if (cookieNames) e.cookiesSent = cookieNames;
@@ -457,9 +468,14 @@ export function reconcile(session, now) {
       bodySize: net.bodySize,
       bodyText: net.bodyText,
       cookiesSent: net.cookieNames || null,
+      // Намерение, которым запрос пометил сам браузер. Довозим до события:
+      // без него человек не отличит «прибор не знал» от «прибор знал и решил».
+      purpose: net.purpose || null,
       netType: net.type,
       netRequestId: net.requestId,
-      // Сеть видела, обёртки не видели: прибор обошли.
+      // Сеть видела, обёртки не видели. Это НАБЛЮДЕНИЕ, а не приговор: так же
+      // выглядит предзагрузка по подсказке в разметке и запрос из воркера
+      // (предел 4а). Имя механизма шире утверждения, которое видит человек.
       match: 'network-only',
       // Свидетельство из сети: страница подделать его не может
       trust: 'external',

@@ -131,6 +131,9 @@
   "health_install_ms": {
     "message": "Instrument setup, ms"
   },
+  "health_purpose_seen": {
+    "message": "Marked by the browser (Sec-Purpose)"
+  },
   "health_reconcile": {
     "message": "Source reconciliation: <b>$1</b> confirmed by both, <b class=\"mimo\">$2</b> seen by the network only, <b>$3</b> never reached the network, <b>$4</b> cannot be checked (WebSocket), <b>$5</b> outside observation — styles, scripts, fonts, images. They are counted but not listed: there is nothing to accuse them of, and as a list they would drown the beacons."
   },
@@ -208,6 +211,9 @@
   },
   "cookies_sent": {
     "message": "cookies sent: $1"
+  },
+  "started_by_browser": {
+    "message": "started by the browser: $1"
   },
   "parser_schema": {
     "message": "schema from $1"

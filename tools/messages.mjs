@@ -101,6 +101,10 @@ export const СТРОКИ = {
   health_counted: ['Счётчиком, без стека', 'Counted, no stack'],
   health_calls_per_sec: ['Вызовов в секунду', 'Calls per second'],
   health_install_ms: ['Установка прибора, мс', 'Instrument setup, ms'],
+  health_purpose_seen: [
+    'Помечено браузером (Sec-Purpose)',
+    'Marked by the browser (Sec-Purpose)',
+  ],
   health_reconcile: [
     'Сверка источников: <b>$1</b> подтверждено обоими, <b class="mimo">$2</b> видела только сеть, <b>$3</b> не дошло до сети, <b>$4</b> нечем проверить (WebSocket), <b>$5</b> вне наблюдения — стили, скрипты, шрифты, картинки. Они посчитаны, но не показаны: обвинять их не в чем, а списком они утопили бы маячки.',
     'Source reconciliation: <b>$1</b> confirmed by both, <b class="mimo">$2</b> seen by the network only, <b>$3</b> never reached the network, <b>$4</b> cannot be checked (WebSocket), <b>$5</b> outside observation — styles, scripts, fonts, images. They are counted but not listed: there is nothing to accuse them of, and as a list they would drown the beacons.',
@@ -170,6 +174,7 @@ export const СТРОКИ = {
     'source not determined — observed from the network only',
   ],
   cookies_sent: ['ушли куки: $1', 'cookies sent: $1'],
+  started_by_browser: ['начал браузер: $1', 'started by the browser: $1'],
   parser_schema: ['схема от $1', 'schema from $1'],
   parser_counts: ['разобрано $1, не опознано $2', '$1 parsed, $2 not identified'],
   not_identified: ['не опознано', 'not identified'],
