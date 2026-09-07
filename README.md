@@ -39,9 +39,11 @@ POST https://www.facebook.com/tr        confirmed by network
   NOT IDENTIFIED: dpo, fbc_f       shown as-is
 ```
 
-**3. What went past the instrument.** Observation comes from two independent sources: the
+**3. What only the network saw.** Observation comes from two independent sources: the
 wrappers inside the page, and the browser's own network layer. A request the network saw
-and the wrappers did not is an evasion, and it is named as one.
+and the wrappers did not is shown separately — and named exactly that, not "an evasion".
+An evasion looks like this; so does a preload the browser starts on its own, and a request
+from a worker. The instrument cannot tell them apart and does not pretend to.
 
 ## What it does not do
 
